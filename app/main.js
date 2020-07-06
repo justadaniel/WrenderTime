@@ -4,6 +4,12 @@ const {
     BrowserWindow
 } = require("electron");
 const path = require("path");
+// const rq = require("./components/electron-require.js");
+const globals = require("./components/globals.js");
+const utils = require("./components/utils.js");
+
+
+
 
 function createWindow() {
     // Create the browser window.
@@ -14,13 +20,13 @@ function createWindow() {
             preload: path.join(__dirname, "preload.js")
         }
     });
+	// console.log(utils.ZERO);
 
     // and load the index.html of the app.
-    // mainWindow.loadFile("index.html");
-	mainWindow.loadURL("https://google.com/");
+    mainWindow.loadFile(utils.GetView("index.html"));
 
     // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
