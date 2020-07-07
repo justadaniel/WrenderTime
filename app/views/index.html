@@ -1,10 +1,119 @@
-</<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>Index</title>
-	</head>
-	<body>
-		Hello World!
-	</body>
+
+<head>
+	<meta charset="utf-8">
+	<title>Index</title>
+	<script type="text/javascript">
+		const { remote, ipcRenderer } = require("electron");
+		const utils = require("../components/utils.js");
+		const globals = require("../components/globals.js");
+
+		const appname = remote.app.getName();
+		const version = remote.app.getVersion();
+	</script>
+	<style>
+		html,
+		body {
+			font-family: sans-serif;
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			position: relative;
+		}
+
+		.page {
+			margin: 0;
+			padding: 0;
+			margin: 10px;
+			position: relative;
+		}
+
+		input[type="text"] {
+			background-color: transparent;
+			appearance: none;
+			border-width: 1pt;
+			border-style: solid;
+			border-radius: 5px;
+			padding: 5px 10px;
+			width: calc(100% - 20px);
+		}
+
+		input[type="text"]:disabled {
+			opacity: 0.35;
+		}
+
+		button {
+			margin: 5px 0px;
+		}
+
+		@media (prefers-color-scheme: dark) {
+			html {
+				color: white;
+				background-color: #333;
+			}
+
+			input[type="text"] {
+				color: white;
+				border-color: rgba(255, 255, 255, 0.5);
+			}
+		}
+
+		@media (prefers-color-scheme: light) {
+			html {
+				color: black;
+				background-color: white;
+			}
+
+			input[type="text"] {
+				color: black;
+				border-color: rgba(0, 0, 0, 0.5);
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div class="page">
+		<h1>
+			<script type="text/javascript">document.write(appname);</script>
+		</h1>
+		<h3>
+			<script type="text/javascript">document.write(version);</script>
+		</h3>
+		<p>
+			<span style="color:red;"><b>WARNING:</b> This is a prototype!</span>
+		</p>
+		<input id="watchDirectory" type="text" placeholder="Watch Directory"
+			value="D:\GCC\Military Recognition (2020)\Exported" />
+		<br />
+		<button id="toggleButton" onclick="toggleWatching()">Start</button>
+		<h4>Output</h4>
+		<p id="readout"></p>
+	</div>
+	<script type="text/javascript">
+		function getWorkingDirectoryField() {
+			return document.getElementById("watchDirectory");
+		}
+
+		function toggleWatching() {
+			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, getWorkingDirectoryField().value);
+		}
+
+		document.addEventListener('DOMContentLoaded', () => ipcRenderer.send(globals.systemEventNames.DOM_LOADED, "Im ready"));
+
+		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {
+			let toggleButton = document.getElementById("toggleButton");
+			toggleButton.textContent = (isWatching) ? "Stop" : "Start";
+			getWorkingDirectoryField().disabled = isWatching;
+		});
+		ipcRenderer.on(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, (event, e, p) => {
+			// alert(e + ": " + p);
+			// console.log(e + ": " + p);
+			console.log(e);
+			document.getElementById("readout").innerHTML = "<b>" + e + ":</b> <i>" + p + "</i>";
+		});
+	</script>
+</body>
+
 </html>
