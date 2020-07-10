@@ -16,7 +16,7 @@ const chokidar = require("chokidar");
 const { menubar } = require("menubar");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
-const isStandaloneWindow = false;
+const isStandaloneWindow = true;
 
 let mb = null;
 let mainWindow = null;

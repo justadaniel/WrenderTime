@@ -84,8 +84,7 @@
 		<p>
 			<span style="color:red;"><b>WARNING:</b> This is a prototype!</span>
 		</p>
-		<input id="watchDirectory" type="text" placeholder="Watch Directory"
-			value="D:\GCC\Military Recognition (2020)\Exported" />
+		<input id="watchDirectory" type="text" placeholder="Watch Directory" value="D:\GCC\_Exported" />
 		<br />
 		<button id="toggleButton" onclick="toggleWatching()">Start</button>
 		<h4>Output</h4>
@@ -110,8 +109,10 @@
 		ipcRenderer.on(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, (event, e, p) => {
 			// alert(e + ": " + p);
 			// console.log(e + ": " + p);
-			console.log(e);
-			document.getElementById("readout").innerHTML = "<b>" + e + ":</b> <i>" + p + "</i>";
+			let debugText = `${e}: \"${p}\"`;
+			let debugTextHTML = `<b>${e}:</b> <i>\"${p}\"</i>`;
+			console.log(debugText);
+			document.getElementById("readout").innerHTML = debugTextHTML;
 		});
 	</script>
 </body>
