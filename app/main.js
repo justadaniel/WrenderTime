@@ -47,7 +47,8 @@ if (!isStandaloneWindow) {
         mb = menubar({
             dir: path.join(__dirname || path.resolve(dirname("")), "..", utils.GetView()),
             tray: tray,
-            tooltip: app.name,
+            tooltip: `${app.name} - v${app.version}`,
+            preloadWindow: true,
             browserWindow: {
                 // alwaysOnTop: true,
                 // transparent: true,
@@ -57,11 +58,15 @@ if (!isStandaloneWindow) {
                 }
             }
         });
+        mb.app.commandLine.appendSwitch("disable-backgrounding-occluded-windows", "true");//could be a performance hit
 
         mb.on("ready", () => {
-            console.log("app is ready");
+            utils.ShowNotification("App Ready");
         });
 
+        // mb.on("after-create-window", () => {
+        //     mb.window.openDevTools();
+        // });
     });
 }
 else {

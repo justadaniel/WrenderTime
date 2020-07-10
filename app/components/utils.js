@@ -12,7 +12,7 @@ const {
     EventEmitter
 } = require("electron");
 const chokidar = require("chokidar");
-var inherits = require('util').inherits;
+var inherits = require("util").inherits;
 
 let watcher = null;
 
@@ -22,22 +22,6 @@ var directories = {
 };
 
 var utils = {
-    GetView: function (file = "") {
-        return directories.VIEWS + file;
-    },
-    StartWatch: function (dir, callback) {
-        watcher = chokidar.watch(dir).on('all', (event, path) => {
-            // console.log(event, path);
-            callback(event, path);
-        });
-        return watcher;
-    },
-    StopWatch: function () {
-        if (watcher != null && watcher != "undefined") {
-            watcher.close().then(() => console.log('closed'));
-            watcher = null;
-        }
-    },
     WatchEvents: {
         ADD: "add",
         ADD_DIR: "addDir",
@@ -48,25 +32,36 @@ var utils = {
         READY: "ready",
         RAW: "raw"
     },
+    GetView: function (file = "") {
+        return directories.VIEWS + file;
+    },
+    StartWatch: function (dir, callback) {
+        watcher = chokidar.watch(dir).on("all", (event, path) => {
+            // console.log(event, path);
+            callback(event, path);
+        });
+        return watcher;
+    },
+    StopWatch: function () {
+        if (watcher != null && watcher != "undefined") {
+            watcher.close().then(() => console.log("closed"));
+            watcher = null;
+        }
+    },
     RequestQuit: function (confirmCallback = null) {
         console.log("requested quit");
 
-        const options = {
-            noLink: true,
+        let response = utils.ShowAlert("Do you really want to quit?", {
             title: "Quitting...",
-            message: "Do you really want to quit?",
             detail: "Doing so will kill all watch folders.",
             buttons: ["Quit", "Cancel"],
             defaultId: 1,
             cancelId: 1,
-        };
-
-        let response = dialog.showMessageBoxSync(options);
+        });
 
         if (response == 0) {
             utils.Quit(confirmCallback);
         }
-
     },
     Quit: function (callback = null) {
         console.log("Quitting");
@@ -76,14 +71,39 @@ var utils = {
 
         if (process.platform !== "darwin") app.quit();
     },
-    ShowNotification: function () {
-        let myNotification = new Notification('Title', {
-            body: 'Lorem Ipsum Dolor Sit Amet'
-        });
+    ShowAlert: function (message, options = {}) {
+        let defaults = {
+            noLink: true,
+            title: app.name,
+            message: message || "Message goes here",
+            // detail: "Doing so will kill all watch folders.",
+            // buttons: ["Quit", "Cancel"],
+            // defaultId: 1,
+            // cancelId: 1,
+        };
+        options = Object.assign(defaults, options);
 
-        myNotification.onclick = () => {
-            console.log('Notification clicked')
-        }
+        let response = dialog.showMessageBoxSync(options);
+        console.log(message);
+
+        return response;
+    },
+    ShowNotification: function (message, options = {}) {
+        let defaults = {
+            title: app.name,
+            body: message
+        };
+        options = Object.assign(defaults, options);
+
+        let notify = new Notification(options);
+        notify.show();
+        console.log(message);
+
+        // notify.onclick = () => {
+        //     console.log("Notification Clicked");
+        // }
+
+        return notify;
     }
 }
 
