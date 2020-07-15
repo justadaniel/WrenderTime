@@ -28,6 +28,7 @@
         "chokidar": "^3.4.0",
         "electron-context-menu": "^2.0.1",
         "electron-is-dev": "^1.2.0",
+        "electron-settings": "^4.0.2",
         "electron-store": "^5.2.0",
         "electron-sudo": "^4.0.12",
         "electron-updater": "^4.3.1",

@@ -3,116 +3,230 @@
 
 <head>
 	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="theme-color" content="#2196f3">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="msapplication-tap-highlight" content="no">
+	<link rel="stylesheet" href="../assets/framework7/css/framework7.bundle.min.css">
+	<link rel="stylesheet" href="../assets/css/icons.css">
+	<link rel="stylesheet" href="../assets/css/app.css">
 	<title>Index</title>
 	<script type="text/javascript">
 		const { remote, ipcRenderer } = require("electron");
 		const utils = require("../components/utils.js");
 		const globals = require("../components/globals.js");
-
+		const RenderFile = require("../components/RenderFile.js");
 		const appname = remote.app.getName();
 		const version = remote.app.getVersion();
 	</script>
-	<style>
-		html,
-		body {
-			font-family: sans-serif;
-			margin: 0;
-			padding: 0;
-			width: 100%;
-			position: relative;
-		}
-
-		.page {
-			margin: 0;
-			padding: 0;
-			margin: 10px;
-			position: relative;
-		}
-
-		input[type="text"] {
-			background-color: transparent;
-			appearance: none;
-			border-width: 1pt;
-			border-style: solid;
-			border-radius: 5px;
-			padding: 5px 10px;
-			width: calc(100% - 20px);
-		}
-
-		input[type="text"]:disabled {
-			opacity: 0.35;
-		}
-
-		button {
-			margin: 5px 0px;
-		}
-
-		@media (prefers-color-scheme: dark) {
-			html {
-				color: white;
-				background-color: #333;
-			}
-
-			input[type="text"] {
-				color: white;
-				border-color: rgba(255, 255, 255, 0.5);
-			}
-		}
-
-		@media (prefers-color-scheme: light) {
-			html {
-				color: black;
-				background-color: white;
-			}
-
-			input[type="text"] {
-				color: black;
-				border-color: rgba(0, 0, 0, 0.5);
-			}
-		}
-	</style>
 </head>
 
 <body>
-	<div class="page">
-		<h1>
-			<script type="text/javascript">document.write(appname);</script>
-		</h1>
-		<h3>
-			<script type="text/javascript">document.write(version);</script>
-		</h3>
-		<p>
-			<span style="color:red;"><b>WARNING:</b> This is a prototype!</span>
-		</p>
+	<!-- App root element -->
+	<div id="app">
+		<!-- Your main view, should have "view-main" class -->
+		<div class="appbar">
+			<div class="appbar-inner">
+				<div class="left">
+					<a href="#" data-popover=".popover-devtools" class="button button-small display-flex popover-open">
+						<i class="f7-icons">bars</i>
+					</a>
+					<!-- <a class="button button-small display-flex margin-left-half">
+						<i class="f7-icons">arrowshape_turn_up_left_fill</i>
+					</a>
+					<a class="button button-small display-flex margin-left-half">
+						<i class="f7-icons">arrowshape_turn_up_left_2_fill</i>
+					</a>
+					<a class="button button-small display-flex margin-left-half">
+						<i class="f7-icons">arrowshape_turn_up_right_fill</i>
+					</a> -->
+				</div>
+				<!-- <div class="center">
+					<a class="button button-small display-flex margin-left-half">Keys</a>
+					<a class="button button-small display-flex margin-left-half">Categories</a>
+					<a class="button button-small display-flex margin-left-half">Languages</a>
+					<a class="button button-small display-flex margin-left-half">Import</a>
+					<a class="button button-small display-flex margin-left-half">Export</a>
+				</div> -->
+				<!-- <div class="right">
+					<div class="searchbar searchbar-inline">
+						<div class="searchbar-input-wrap">
+							<input type="text" placeholder="Search app">
+							<i class="searchbar-icon"></i>
+							<div class="input-clear-button"></div>
+						</div>
+					</div>
+				</div> -->
+			</div>
+		</div>
+		<div class="view view-main safe-areas">
+		</div>
+		<!-- Popup -->
+		<div class="popup" id="my-popup">
+			<div class="view">
+				<div class="page">
+					<div class="navbar">
+						<div class="navbar-inner">
+							<div class="title">Popup</div>
+							<div class="right">
+								<a href="#" class="link popup-close">Close</a>
+							</div>
+						</div>
+					</div>
+					<div class="page-content">
+						<div class="block block-strong dropzone"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="popover popover-devtools">
+			<div class="popover-inner">
+				<div class="list">
+					<ul>
+						<li><a class="list-button item-link toggle-devtools" href="#">Toggle DevTools</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- <div class="page">
 		<input id="watchDirectory" type="text" placeholder="Watch Directory" value="D:\GCC\_Exported" />
 		<br />
 		<button id="toggleButton" onclick="toggleWatching()">Start</button>
 		<h4>Output</h4>
 		<p id="readout"></p>
-	</div>
+	</div> -->
+	<script src="../assets/framework7/js/framework7.bundle.min.js"></script>
+	<script src="../assets/js/routes.js"></script>
+	<!-- <script src="../assets/js/dropzone.js"></script> -->
+	<script src="../assets/js/app.js"></script>
 	<script type="text/javascript">
+
+		var mainView = app.views.create('.view-main', {
+			url: '/',
+			main: true,
+			masterDetailBreakpoint: 800,
+			// routes: localization_routes
+		});
+
+
+
+
+
+
+		const pageIDs = {
+			form: "#my-form",
+			workingDirectoryInputField: 'input[name="watchdir"]',
+			toggleButton: "#toggleButton",
+			readout: "#readout",
+			watchFileVirtualList: ".watch-file-list"
+		}
+
+		// Dummy items array
+		var cachedItems = [];
+		var watchFilesVirtualList;
+		var virtualListOptions = {
+			// List Element
+			el: pageIDs.watchFileVirtualList,
+			// items: items,// Pass array with items
+			items: [],
+			// Custom search function for searchbar
+			// searchAll: function (query, items) {
+			// 	var found = [];
+			// 	for (var i = 0; i < items.length; i++) {
+			// 		if (items[i].title.toLowerCase().indexOf(query.toLowerCase()) >= 0 || query.trim() === '') found.push(i);
+			// 	}
+			// 	return found; //return array with mathced indexes
+			// },
+			// List item Template7 template
+			itemTemplate:
+				'<li class="item-content">' +
+				'<div class="item-inner">' +
+				'<div class="item-title-row">' +
+				'<div class="item-title">{{title}}</div>' +
+				'<div class="item-after">{{after}}</div>' +
+				'</div>' +
+				'<div class="item-subtitle">{{subtitle}}</div>' +
+				'<div class="item-text">{{body}}</div>' +
+				'</div>' +
+				'</li>',
+			// Item height
+			height: app.theme === 'ios' ? 63 : (app.theme === 'md' ? 73 : 46),
+		};
+
+
+
+
+		function CreateWatchList() {
+			watchFilesVirtualList = app.virtualList.create(virtualListOptions);
+			console.log("Virtual List Created");
+		}
+
+
 		function getWorkingDirectoryField() {
-			return document.getElementById("watchDirectory");
+			return $$(pageIDs.workingDirectoryInputField);
 		}
 
 		function toggleWatching() {
-			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, getWorkingDirectoryField().value);
+			var formData = app.form.convertToData(pageIDs.form);
+			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, formData.watchdir);
 		}
 
-		document.addEventListener('DOMContentLoaded', () => ipcRenderer.send(globals.systemEventNames.DOM_LOADED, "Im ready"));
+		document.addEventListener('DOMContentLoaded', () => {
+			ipcRenderer.send(globals.systemEventNames.DOM_LOADED, "Im ready");
+		});
+
+		const mainPageName = "main";
+		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
+			CreateWatchList();
+		});
+		// $$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
+		// 	CreateWatchList();
+		// });
 
 		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {
-			let toggleButton = document.getElementById("toggleButton");
-			toggleButton.textContent = (isWatching) ? "Stop" : "Start";
-			getWorkingDirectoryField().disabled = isWatching;
+			// let toggleButton = document.getElementById("toggleButton");
+			$$(pageIDs.toggleButton).text((isWatching) ? "Stop" : "Start");
+			$$(pageIDs.workingDirectoryInputField).disabled = isWatching;
+
+			// if (isWatching == false) watchFilesVirtualList.deleteAllItems();
 		});
 		ipcRenderer.on(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, (event, e, p) => {
-			// alert(e + ": " + p);
-			// console.log(e + ": " + p);
 			let debugText = `${e}: \"${p}\"`;
 			let debugTextHTML = `<b>${e}:</b> <i>\"${p}\"</i>`;
-			console.log(debugText);
-			document.getElementById("readout").innerHTML = debugTextHTML;
+			// console.log(debugText);
+			$$(pageIDs.readout).html(debugTextHTML);
+		});
+
+
+
+
+
+		ipcRenderer.on(globals.systemEventNames.WATCH_LIST_UPDATED, (event, updated_watch_list) => {
+			if (cachedItems != updated_watch_list) {
+				cachedItems = updated_watch_list;
+				// console.log(updated_watch_list);
+			}
+
+			// CreateWatchList();
+
+			let tempList = [];
+			for (var i = 0; i < updated_watch_list.length; i++) {
+				let _file = updated_watch_list[i];
+				// console.log({ file: _file });
+				tempList.push({
+					title: _file.file,
+					subtitle: utils.BytesToHumanFileSize(_file.stats["size"])
+				});
+			}
+			watchFilesVirtualList.replaceAllItems(tempList);
+			// watchFilesVirtualList.update();
 		});
 	</script>
 </body>

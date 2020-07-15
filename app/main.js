@@ -12,23 +12,26 @@ const path = require("path");
 // const rq = require("./components/electron-require.js");
 const globals = require("./components/globals.js");
 const utils = require("./components/utils.js");
+const ModernWindow = require("./components/ModernWindow.js");
 const chokidar = require("chokidar");
 const { menubar } = require("menubar");
+const RenderFile = require("./components/RenderFile.js");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
-const isStandaloneWindow = true;
 
+const isStandaloneWindow = true;
 let mb = null;
 let mainWindow = null;
 
 let isWatching = false;
 
+let tray;
 
 if (!isStandaloneWindow) {
 
     app.on("ready", function () {
 
-        const tray = new Tray(iconPath);
+        tray = new Tray(iconPath);
         const contextMenu = Menu.buildFromTemplate([
             { label: "Preferences", type: "normal" },
             { label: "About", type: "normal", role: "about" },
@@ -52,6 +55,7 @@ if (!isStandaloneWindow) {
             browserWindow: {
                 // alwaysOnTop: true,
                 // transparent: true,
+                // draggable: false,
                 resizable: false,
                 webPreferences: {
                     nodeIntegration: true
@@ -73,9 +77,8 @@ else {
 
     function createWindow() {
         // Create the browser window.
-        mainWindow = new BrowserWindow({
-            width: 800,
-            height: 600,
+        mainWindow = new ModernWindow({
+            width: 400,
             webPreferences: {
                 nodeIntegration: true,
                 preload: path.join(__dirname, "preload.js")
@@ -87,7 +90,7 @@ else {
         mainWindow.loadFile(utils.GetView("index.html"));
 
         // Open the DevTools.
-        mainWindow.webContents.openDevTools();
+        // mainWindow.webContents.openDevTools();
     }
 
     // This method will be called when Electron has finished
@@ -117,18 +120,57 @@ else {
 }
 
 
+let FILES_LIST = [];
+
+function OnProcessFile(watchEvent, path) {
+
+    switch (watchEvent) {
+        case utils.WatchEvents.ADD:
+            console.log(`Added \"${path}\"`);
+            FILES_LIST.push(new RenderFile(path));
+            break;
+        case utils.WatchEvents.CHANGE:
+            console.log(`Changed \"${path}\"`);
+            let _tempFile = new RenderFile(path);
+            let _index = FILES_LIST.findIndex((obj => obj.file == _tempFile.file));
+            FILES_LIST[_index].RefreshInfo();
+            break;
+        case utils.WatchEvents.UNLINK:
+            console.log(`Removed \"${path}\"`);
+            FILES_LIST.splice(FILES_LIST.findIndex(e => e.file === path), 1);
+            console.log(FILES_LIST);
+
+            // var filtered = FILES_LIST.filter(function (value, index, arr) {
+            //     return value.file == path;
+            // });
+            // console.log(`Filtered: ${filtered}`);
+            break;
+        default:
+            console.log(`\"${watchEvent}\" not added to switch`);
+            break;
+    }
+
+    UpdateList();
+}
+
+function UpdateList() {
+    if (mb != null) {
+        mb.window.webContents.send(globals.systemEventNames.WATCH_LIST_UPDATED, FILES_LIST);
+    } else {
+        mainWindow.webContents.send(globals.systemEventNames.WATCH_LIST_UPDATED, FILES_LIST);
+    }
+}
 
 
 
 function UpdateStatus(event) {
     event.reply(globals.systemEventNames.WATCH_STATUS_CHANGED, isWatching);
-
-    if (mb != null)
-        mb.tooltip = app.name + " - " + (isWatching) ? "Watching" : "Not Watching";
+    if (mb != null) mb.tooltip = app.name + " - " + (isWatching) ? "Watching" : "Not Watching";
 }
 
 ipcMain.on(globals.systemEventNames.DOM_LOADED, (event) => {
     UpdateStatus(event);
+    UpdateList();
 });
 
 ipcMain.on(globals.systemEventNames.TOGGLE_WATCH, (event, dir) => {
@@ -139,14 +181,17 @@ ipcMain.on(globals.systemEventNames.TOGGLE_WATCH, (event, dir) => {
             } else {
                 mainWindow.webContents.send(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, e, p);
             }
-            console.log(e);
+
+            OnProcessFile(e, p);
         });
         isWatching = true;
     } else {
         utils.StopWatch();
         isWatching = false;
+        FILES_LIST = [];
     }
     UpdateStatus(event);
+    UpdateList();
 });
 
 

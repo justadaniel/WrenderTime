@@ -1,0 +1,249 @@
+html {
+    background: transparent;
+}
+
+html,
+body,
+.panel,
+/* .panel-backdrop, */
+.view,
+.page {
+    background: var(--f7-page-bg-color);
+}
+
+.theme-dark {
+	--f7-dialog-bg-color: var(--f7-block-strong-bg-color);
+	--f7-dialog-text-color: var(--f7-block-strong-text-color);
+}
+:root.device-macos {
+    /* --f7-navbar-inner-padding-left:calc(60px + 15px); */
+    --f7-navbar-inner-padding-left-inset:calc(50px + var(--f7-navbar-inner-padding-left));
+}
+:root.device-macos .view-left .navbar .navbar-inner .left,
+:root.device-macos .panel-left:not(.panel-visible-by-breakpoint)~.view .navbar .navbar-inner .left {
+    padding-left:var(--f7-navbar-inner-padding-left-inset);
+}
+.view.view-master-detail .navbar-master-detail .link.back,
+.view.view-master-detail .page-master-detail .navbar .link.back {
+    display: none;
+}
+:root.device-macos .view .page-master .navbar .left,
+:root.device-macos .view:not(.view-master-detail) .navbar-master-detail .left,
+:root.device-macos .view:not(.view-master-detail) .page-master-detail .navbar .left {
+    padding-left:var(--f7-navbar-inner-padding-left-inset);
+}
+
+
+/* Left Panel right border when it is visible by breakpoint */
+.panel-left.panel-visible-by-breakpoint:before {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    content: '';
+    z-index: 6000;
+}
+
+/* Hide navbar link which opens left panel when it is visible by breakpoint */
+.panel-left.panel-visible-by-breakpoint~.view .navbar .panel-open[data-panel="left"] {
+    display: none;
+}
+/*
+  Extra borders for main view and left panel for iOS theme when it behaves as panel (before breakpoint size)
+*/
+.ios .panel-left:not(.panel-visible-by-breakpoint).panel-active~.view-main:before,
+.ios .panel-left:not(.panel-visible-by-breakpoint).panel-closing~.view-main:before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    content: '';
+    z-index: 6000;
+}
+
+/*
+.dialog-backdrop {
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+}
+.dialog-backdrop.backdrop-in {
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+}
+*/
+
+.appbar,
+.navbar {
+    -webkit-app-region: drag;
+    -webkit-user-select: none;
+}
+.appbar.draggable,
+.navbar.draggable {
+    -webkit-app-region: drag;
+    -webkit-user-select: none;
+}
+.appbar a,
+.appbar input,
+.navbar a,
+.navbar input {
+    -webkit-app-region: no-drag;
+}
+.appbar a,
+.navbar a {
+    cursor: pointer;
+}
+
+.appbar:after {
+    display: none !important;
+}
+#system-appbar.appbar span {
+    opacity: 0.8;
+}
+#system-appbar.appbar:after {
+    display: none !important;
+}
+
+/* :root:not(.device-macos) #system-appbar.appbar {
+    display:block;
+}
+:root.device-desktop {
+
+} */
+
+
+
+
+.titlebar {
+    display: block;
+    position: relative;
+    height: 32px;
+    padding: 0;
+    background: #fff;
+	color:black;
+    -webkit-app-region: drag;
+	z-index: 9999;
+	border-bottom: solid 1px #ccc;
+}
+.titlebar-title {
+    float: left;
+    text-align: left;
+	line-height: 30px;
+	padding: 0px 10px;
+	font-size: 8pt;
+}
+.titlebar-controls {
+    float: right;
+    text-align: left;
+}
+.titlebar:after,
+.titlebar-controls:after {
+    content: ' ';
+    display: table;
+    clear: both;
+}
+.titlebar-minimize,
+.titlebar-resize,
+.titlebar-close {
+    float: left;
+    width: 45px;
+    height: 31px;
+    margin: 1px 1px 0 0;
+    text-align: center;
+    line-height: 29px;
+	cursor: pointer;
+    -webkit-app-region: no-drag;
+    -webkit-transition: background-color .2s;
+    -moz-transition: background-color .2s;
+    -ms-transition: background-color .2s;
+    -o-transition: background-color .2s;
+    transition: background-color .2s;
+}
+.titlebar.draggable .titlebar-minimize,
+.titlebar.draggable .titlebar-resize,
+.titlebar.draggable .titlebar-close {
+    -webkit-app-region: no-drag;
+}
+.titlebar-minimize svg,
+.titlebar-resize svg.maximize-svg,
+.titlebar-resize svg.fullscreen-svg,
+.titlebar-close svg {
+    width: 10px;
+    height: 10px;
+    shape-rendering: crispEdges;
+}
+.titlebar-close svg polygon {
+    -webkit-transition: fill .2s;
+    -moz-transition: fill .2s;
+    -ms-transition: fill .2s;
+    -o-transition: fill .2s;
+    transition: fill .2s;
+}
+.titlebar:not(.fullscreen) svg.maximize-svg {
+    display: none;
+}
+.titlebar.fullscreen svg.fullscreen-svg {
+    display: none;
+}
+.titlebar .titlebar-close:hover {
+    background-color: rgba(232, 17, 35, 0.9);
+}
+.titlebar .titlebar-minimize:hover,
+.titlebar .titlebar-resize:hover,
+.titlebar .titlebar-fullscreen:hover {
+    background-color: rgba(0,0,0,0.2);
+}
+.titlebar .titlebar-close:hover {
+    fill: rgba(0, 0, 0, 1);
+}
+.theme-dark .titlebar {
+	background: #000;
+	color:white;
+}
+.theme-dark .titlebar .titlebar-minimize:hover,
+.theme-dark .titlebar .titlebar-resize:hover,
+.theme-dark .titlebar .titlebar-fullscreen:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+.theme-dark .titlebar-close:hover svg polygon {
+    fill: rgba(255, 255, 255, 1);
+}
+.theme-dark .titlebar svg polygon,
+.theme-dark .titlebar svg rect,
+.theme-dark .titlebar svg>path {
+    fill: rgba(255, 255, 255, 1);
+}
+
+
+.dropzone {
+    /* position: absolute; */
+    width:100%;
+    height:100%;
+    background: rgba(255, 110, 110, 0.301);
+}
+.block.block-strong.dropzone {
+	/* background-color:var(--f7-list-button-hover-bg-color); */
+}
+.block.block-strong.dropzone:not(.dz-started):hover {
+	background-color:var(--f7-list-button-hover-bg-color);
+}
+.block.block-strong.dropzone:not(.dz-started):active {
+	background-color:var(--f7-list-button-pressed-bg-color);
+}
+.dz-clickable {
+	cursor: pointer;
+}
+.dz-drag-hover {
+	background-color:var(--f7-list-button-pressed-bg-color);
+}
+.dz-started {
+	cursor: default;
+}
+/* .dz-preview
+.dz-file-preview
+.dz-processing
+.dz-error
+.dz-complete */
