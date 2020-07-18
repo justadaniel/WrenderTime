@@ -10,22 +10,27 @@ const {
 } = require("electron");
 const path = require("path");
 // const rq = require("./components/electron-require.js");
-const globals = require("./components/globals.js");
-const utils = require("./components/utils.js");
+const globals = require("./components/Globals.js");
+const utilities = require("./components/Utilities.js");
 const ModernWindow = require("./components/ModernWindow.js");
 const chokidar = require("chokidar");
 const { menubar } = require("menubar");
+const RenderList = require("./components/RenderList.js");
 const RenderFile = require("./components/RenderFile.js");
+// const IFTTT = require("./components/IFTTT.js");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
 
 const isStandaloneWindow = true;
 let mb = null;
 let mainWindow = null;
-
+let startWatchingOnBoot = true;
 let isWatching = false;
 
 let tray;
+
+
+
 
 if (!isStandaloneWindow) {
 
@@ -39,8 +44,8 @@ if (!isStandaloneWindow) {
             {
                 label: "Quit", type: "normal", click: (menuItem, browserWindow, event) => {
 
-                    utils.RequestQuit(function () {
-                        utils.StopWatch();
+                    utilities.RequestQuit(function () {
+                        utilities.StopWatch();
                     });
                 }
             },
@@ -48,7 +53,7 @@ if (!isStandaloneWindow) {
         tray.setContextMenu(contextMenu);
 
         mb = menubar({
-            dir: path.join(__dirname || path.resolve(dirname("")), "..", utils.GetView()),
+            dir: path.join(__dirname || path.resolve(dirname("")), "..", utilities.GetView()),
             tray: tray,
             tooltip: `${app.name} - v${app.version}`,
             preloadWindow: true,
@@ -65,7 +70,7 @@ if (!isStandaloneWindow) {
         mb.app.commandLine.appendSwitch("disable-backgrounding-occluded-windows", "true");//could be a performance hit
 
         mb.on("ready", () => {
-            utils.ShowNotification("App Ready");
+            utilities.ShowNotification("App Ready");
         });
 
         // mb.on("after-create-window", () => {
@@ -78,19 +83,20 @@ else {
     function createWindow() {
         // Create the browser window.
         mainWindow = new ModernWindow({
-            width: 400,
+            width: 800,
+            transparent: false,
+            frame: true,
             webPreferences: {
                 nodeIntegration: true,
                 preload: path.join(__dirname, "preload.js")
             }
         });
-        // console.log(utils.ZERO);
+        // mainWindow.removeMenu();
 
         // and load the index.html of the app.
-        mainWindow.loadFile(utils.GetView("index.html"));
-
+        mainWindow.loadFile(utilities.GetView("index.html"));
         // Open the DevTools.
-        // mainWindow.webContents.openDevTools();
+        mainWindow.webContents.openDevTools();
     }
 
     // This method will be called when Electron has finished
@@ -102,7 +108,11 @@ else {
         app.on("activate", function () {
             // On macOS it"s common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) createWindow();
+            if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow();
+
+                utilities.ShowNotification("App Ready");
+            }
         });
     });
 
@@ -110,8 +120,8 @@ else {
     // for applications and their menu bar to stay active until the user quits
     // explicitly with Cmd + Q.
     app.on("window-all-closed", function () {
-        utils.Quit(function () {
-            utils.StopWatch();
+        utilities.Quit(function () {
+            RENDER_LIST.StopWatching();
         });
     });
 
@@ -119,84 +129,75 @@ else {
     // code. You can also put them in separate files and require them here.
 }
 
-
-let FILES_LIST = [];
-
-function OnProcessFile(watchEvent, path) {
-
-    switch (watchEvent) {
-        case utils.WatchEvents.ADD:
-            console.log(`Added \"${path}\"`);
-            FILES_LIST.push(new RenderFile(path));
-            break;
-        case utils.WatchEvents.CHANGE:
-            console.log(`Changed \"${path}\"`);
-            let _tempFile = new RenderFile(path);
-            let _index = FILES_LIST.findIndex((obj => obj.file == _tempFile.file));
-            FILES_LIST[_index].RefreshInfo();
-            break;
-        case utils.WatchEvents.UNLINK:
-            console.log(`Removed \"${path}\"`);
-            FILES_LIST.splice(FILES_LIST.findIndex(e => e.file === path), 1);
-            console.log(FILES_LIST);
-
-            // var filtered = FILES_LIST.filter(function (value, index, arr) {
-            //     return value.file == path;
-            // });
-            // console.log(`Filtered: ${filtered}`);
-            break;
-        default:
-            console.log(`\"${watchEvent}\" not added to switch`);
-            break;
-    }
-
-    UpdateList();
+let preferencesWindow;
+function OpenPreferences() {
+    preferencesWindow = new ModernWindow({
+        width: 400,
+        transparent: false,
+        frame: true,
+        webPreferences: {
+            nodeIntegration: true,
+            preload: path.join(__dirname, "preload.js")
+        }
+    });
+    preferencesWindow.removeMenu();
+    preferencesWindow.loadFile(utilities.GetView("index.html"));
 }
 
-function UpdateList() {
+
+const RENDER_LIST = new RenderList();
+
+function SendEventToRenderer(event, arg0, arg1, arg2) {
     if (mb != null) {
-        mb.window.webContents.send(globals.systemEventNames.WATCH_LIST_UPDATED, FILES_LIST);
+        mb.window.webContents.send(event, arg0);
     } else {
-        mainWindow.webContents.send(globals.systemEventNames.WATCH_LIST_UPDATED, FILES_LIST);
+        mainWindow.webContents.send(event, arg0);
     }
 }
 
+RENDER_LIST.on(globals.systemEventNames.WATCH_STATUS_CHANGED, function (isWatching) {
+    // console.log(`Is Watching == ${isWatching}`);
+    SendEventToRenderer(globals.systemEventNames.WATCH_STATUS_CHANGED, isWatching);
 
+    if (mb != null) {
+        mb.tooltip = app.name + " - " + (RENDER_LIST.isWatching) ? "Watching" : "Not Watching";
+    }
+});
 
-function UpdateStatus(event) {
-    event.reply(globals.systemEventNames.WATCH_STATUS_CHANGED, isWatching);
-    if (mb != null) mb.tooltip = app.name + " - " + (isWatching) ? "Watching" : "Not Watching";
+RENDER_LIST.on(globals.systemEventNames.WATCH_LIST_UPDATED, function (items) {
+    // SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, items);
+    UpdateWatchList();
+});
+
+function UpdateWatchList() {
+    // console.log(`List Updated!!`);
+    SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, RENDER_LIST.items);
+}
+function UpdateWatchListStatus(event) {
+    event.reply(globals.systemEventNames.WATCH_STATUS_CHANGED, RENDER_LIST.isWatching);
+    if (mb != null) mb.tooltip = app.name + " - " + (RENDER_LIST.isWatching) ? "Watching" : "Not Watching";
 }
 
 ipcMain.on(globals.systemEventNames.DOM_LOADED, (event) => {
-    UpdateStatus(event);
-    UpdateList();
+    UpdateWatchListStatus(event);
+    UpdateWatchList();
 });
 
 ipcMain.on(globals.systemEventNames.TOGGLE_WATCH, (event, dir) => {
-    if (isWatching == false) {
-        utils.StartWatch(dir, (e, p) => {
-            if (mb != null) {
-                mb.window.webContents.send(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, e, p);
-            } else {
-                mainWindow.webContents.send(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, e, p);
-            }
-
-            OnProcessFile(e, p);
-        });
-        isWatching = true;
-    } else {
-        utils.StopWatch();
-        isWatching = false;
-        FILES_LIST = [];
-    }
-    UpdateStatus(event);
-    UpdateList();
+    RENDER_LIST.ToggleWatching(dir, function () {
+        UpdateWatchList();
+    });
+    // UpdateWatchListStatus(event);
 });
 
 
 ipcMain.on(globals.systemEventNames.REQUEST_QUIT, (event) => {
-    utils.RequestQuit(function () {
-        utils.StopWatch();
+    utilities.RequestQuit(function () {
+        RENDER_LIST.StopWatching();
     });
+});
+
+
+ipcMain.on(globals.systemEventNames.RENDER_FINISHED, (event, file) => {
+    utilities.ShowNotification(globals.systemEventNames.RENDER_FINISHED);
 });

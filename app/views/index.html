@@ -15,11 +15,11 @@
 	<link rel="stylesheet" href="../assets/framework7/css/framework7.bundle.min.css">
 	<link rel="stylesheet" href="../assets/css/icons.css">
 	<link rel="stylesheet" href="../assets/css/app.css">
-	<title>Index</title>
+	<title>Loading...</title>
 	<script type="text/javascript">
 		const { remote, ipcRenderer } = require("electron");
-		const utils = require("../components/utils.js");
-		const globals = require("../components/globals.js");
+		const utils = require("../components/Utilities.js");
+		const globals = require("../components/Globals.js");
 		const RenderFile = require("../components/RenderFile.js");
 		const appname = remote.app.getName();
 		const version = remote.app.getVersion();
@@ -30,13 +30,13 @@
 	<!-- App root element -->
 	<div id="app">
 		<!-- Your main view, should have "view-main" class -->
-		<div class="appbar">
+		<!-- <div class="appbar">
 			<div class="appbar-inner">
 				<div class="left">
 					<a href="#" data-popover=".popover-devtools" class="button button-small display-flex popover-open">
 						<i class="f7-icons">bars</i>
 					</a>
-					<!-- <a class="button button-small display-flex margin-left-half">
+					<a class="button button-small display-flex margin-left-half">
 						<i class="f7-icons">arrowshape_turn_up_left_fill</i>
 					</a>
 					<a class="button button-small display-flex margin-left-half">
@@ -44,16 +44,16 @@
 					</a>
 					<a class="button button-small display-flex margin-left-half">
 						<i class="f7-icons">arrowshape_turn_up_right_fill</i>
-					</a> -->
+					</a>
 				</div>
-				<!-- <div class="center">
+				<div class="center">
 					<a class="button button-small display-flex margin-left-half">Keys</a>
 					<a class="button button-small display-flex margin-left-half">Categories</a>
 					<a class="button button-small display-flex margin-left-half">Languages</a>
 					<a class="button button-small display-flex margin-left-half">Import</a>
 					<a class="button button-small display-flex margin-left-half">Export</a>
-				</div> -->
-				<!-- <div class="right">
+				</div>
+				<div class="right">
 					<div class="searchbar searchbar-inline">
 						<div class="searchbar-input-wrap">
 							<input type="text" placeholder="Search app">
@@ -61,9 +61,9 @@
 							<div class="input-clear-button"></div>
 						</div>
 					</div>
-				</div> -->
+				</div>
 			</div>
-		</div>
+		</div> -->
 		<div class="view view-main safe-areas">
 		</div>
 		<!-- Popup -->
@@ -116,6 +116,9 @@
 		});
 
 
+		function changePageTitle(title) {
+			document.title = title;
+		}
 
 
 
@@ -145,19 +148,25 @@
 			// 	return found; //return array with mathced indexes
 			// },
 			// List item Template7 template
+			setListHeight: true,
 			itemTemplate:
 				'<li class="item-content">' +
 				'<div class="item-inner">' +
 				'<div class="item-title-row">' +
-				'<div class="item-title">{{title}}</div>' +
-				'<div class="item-after">{{after}}</div>' +
+				'<div class="item-title">{{pretty_name}}</div>' +
+				'<div class="item-after">{{file_extension}}</div>' +
 				'</div>' +
-				'<div class="item-subtitle">{{subtitle}}</div>' +
-				'<div class="item-text">{{body}}</div>' +
+				'<div class="item-subtitle">{{size_formatted}}</div>' +
+				'<div class="item-text">AME ID: {{ameID}}</div>' +
 				'</div>' +
 				'</li>',
 			// Item height
-			height: app.theme === 'ios' ? 63 : (app.theme === 'md' ? 73 : 46),
+			height: function (item) {
+				const twoLine = app.theme === 'ios' ? 106 : (app.theme === 'md' ? 113 : 78);
+				const oneLine = app.theme === 'ios' ? 85 : (app.theme === 'md' ? 93 : 62);
+
+				return oneLine;
+			},
 		};
 
 
@@ -165,9 +174,8 @@
 
 		function CreateWatchList() {
 			watchFilesVirtualList = app.virtualList.create(virtualListOptions);
-			console.log("Virtual List Created");
+			// console.log("Virtual List Created");
 		}
-
 
 		function getWorkingDirectoryField() {
 			return $$(pageIDs.workingDirectoryInputField);
@@ -184,19 +192,17 @@
 
 		const mainPageName = "main";
 		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
+			changePageTitle(`${appname} - v${version}`);
 			CreateWatchList();
 		});
-		// $$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
-		// 	CreateWatchList();
-		// });
 
 		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {
-			// let toggleButton = document.getElementById("toggleButton");
 			$$(pageIDs.toggleButton).text((isWatching) ? "Stop" : "Start");
 			$$(pageIDs.workingDirectoryInputField).disabled = isWatching;
 
-			// if (isWatching == false) watchFilesVirtualList.deleteAllItems();
+			// console.log(`IsWatching: ${isWatching}`);
 		});
+
 		ipcRenderer.on(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, (event, e, p) => {
 			let debugText = `${e}: \"${p}\"`;
 			let debugTextHTML = `<b>${e}:</b> <i>\"${p}\"</i>`;
@@ -204,29 +210,14 @@
 			$$(pageIDs.readout).html(debugTextHTML);
 		});
 
-
-
-
-
 		ipcRenderer.on(globals.systemEventNames.WATCH_LIST_UPDATED, (event, updated_watch_list) => {
 			if (cachedItems != updated_watch_list) {
 				cachedItems = updated_watch_list;
+				// console.log("Updated Cached Items");
 				// console.log(updated_watch_list);
+				watchFilesVirtualList.replaceAllItems(updated_watch_list);
+				watchFilesVirtualList.update();
 			}
-
-			// CreateWatchList();
-
-			let tempList = [];
-			for (var i = 0; i < updated_watch_list.length; i++) {
-				let _file = updated_watch_list[i];
-				// console.log({ file: _file });
-				tempList.push({
-					title: _file.file,
-					subtitle: utils.BytesToHumanFileSize(_file.stats["size"])
-				});
-			}
-			watchFilesVirtualList.replaceAllItems(tempList);
-			// watchFilesVirtualList.update();
 		});
 	</script>
 </body>

@@ -86,13 +86,16 @@ var utils = {
             utils.Quit(confirmCallback);
         }
     },
-    Quit: function (callback = null) {
+    Quit: function (callback = function () { }) {
         console.log("Quitting");
 
         if (callback != null)
-            callback;
+            callback();
 
-        if (process.platform !== "darwin") app.quit();
+        setTimeout(() => {
+            if (process.platform !== "darwin")
+                app.quit();
+        }, 1000);
     },
     ShowAlert: function (message, options = {}) {
         let defaults = {
