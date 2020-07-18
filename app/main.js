@@ -176,7 +176,7 @@ RENDER_LIST.on(globals.systemEventNames.WATCH_LIST_UPDATED, function (items) {
 
 RENDER_LIST.on(globals.systemEventNames.RENDER_FINISHED, function (file) {
     utilities.ShowNotification(`Finished Rendering: ${file.pretty_name}`);
-    IFTTT.SendRequest("wrender_finished", "bG5GBdCHdtzw9HAuWrgqQC", {
+    IFTTT.SendRequest("wrender_finished", "KEY_GOES_HERE", {
         value1: `\"${file.filename}\" Finished Rendering`,
         value2: "https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/14112506/Pembroke-Welsh-Corgi-standing-outdoors-in-the-fall.jpg"
     });
