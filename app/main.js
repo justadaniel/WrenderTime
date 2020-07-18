@@ -17,17 +17,19 @@ const chokidar = require("chokidar");
 const { menubar } = require("menubar");
 const RenderList = require("./components/RenderList.js");
 const RenderFile = require("./components/RenderFile.js");
-// const IFTTT = require("./components/IFTTT.js");
+const IFTTT = require("./components/services/IFTTT.js");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
 
-const isStandaloneWindow = true;
+const isStandaloneWindow = false;
 let mb = null;
 let mainWindow = null;
 let startWatchingOnBoot = true;
 let isWatching = false;
 
 let tray;
+
+const RENDER_LIST = new RenderList();
 
 
 
@@ -145,7 +147,10 @@ function OpenPreferences() {
 }
 
 
-const RENDER_LIST = new RenderList();
+
+
+
+
 
 function SendEventToRenderer(event, arg0, arg1, arg2) {
     if (mb != null) {
@@ -169,6 +174,14 @@ RENDER_LIST.on(globals.systemEventNames.WATCH_LIST_UPDATED, function (items) {
     UpdateWatchList();
 });
 
+RENDER_LIST.on(globals.systemEventNames.RENDER_FINISHED, function (file) {
+    utilities.ShowNotification(`Finished Rendering: ${file.pretty_name}`);
+    IFTTT.SendRequest("wrender_finished", "bG5GBdCHdtzw9HAuWrgqQC", {
+        value1: `\"${file.filename}\" Finished Rendering`,
+        value2: "https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/14112506/Pembroke-Welsh-Corgi-standing-outdoors-in-the-fall.jpg"
+    });
+});
+
 function UpdateWatchList() {
     // console.log(`List Updated!!`);
     SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, RENDER_LIST.items);
@@ -177,6 +190,11 @@ function UpdateWatchListStatus(event) {
     event.reply(globals.systemEventNames.WATCH_STATUS_CHANGED, RENDER_LIST.isWatching);
     if (mb != null) mb.tooltip = app.name + " - " + (RENDER_LIST.isWatching) ? "Watching" : "Not Watching";
 }
+
+ipcMain.on(globals.systemEventNames.WATCH_FILE_MANUALLY_REMOVED, (event, file) => {
+    RENDER_LIST.Remove(file);
+    UpdateWatchList();
+});
 
 ipcMain.on(globals.systemEventNames.DOM_LOADED, (event) => {
     UpdateWatchListStatus(event);
@@ -195,9 +213,4 @@ ipcMain.on(globals.systemEventNames.REQUEST_QUIT, (event) => {
     utilities.RequestQuit(function () {
         RENDER_LIST.StopWatching();
     });
-});
-
-
-ipcMain.on(globals.systemEventNames.RENDER_FINISHED, (event, file) => {
-    utilities.ShowNotification(globals.systemEventNames.RENDER_FINISHED);
 });

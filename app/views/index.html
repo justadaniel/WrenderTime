@@ -150,7 +150,9 @@
 			// List item Template7 template
 			setListHeight: true,
 			itemTemplate:
-				'<li class="item-content">' +
+				'<li class="swipeout" data-id="{{pretty_name}}" data-supporting-video="{{supportingVideoFile}}" data-supporting-audio="{{supportingAudioFile}}">' +
+				'<div class="swipeout-content">' +
+				'<a href="#" class="item-link item-content">' +
 				'<div class="item-inner">' +
 				'<div class="item-title-row">' +
 				'<div class="item-title">{{pretty_name}}</div>' +
@@ -158,6 +160,12 @@
 				'</div>' +
 				'<div class="item-subtitle">{{size_formatted}}</div>' +
 				'<div class="item-text">AME ID: {{ameID}}</div>' +
+				'</div>' +
+				'</a>' +
+				'</div>' +
+				'<div class="swipeout-actions-right">' +
+				'<a href="#" class="swipeout-delete">Remove</a>' +
+				// '<a href="#" data-confirm="Are you sure you want to delete this item?" class="swipeout-delete swipeout-overswipe">Remove</a>' +
 				'</div>' +
 				'</li>',
 			// Item height
@@ -170,10 +178,22 @@
 		};
 
 
-
-
 		function CreateWatchList() {
 			watchFilesVirtualList = app.virtualList.create(virtualListOptions);
+
+			$$(pageIDs.watchFileVirtualList).on('click', 'li', function () {
+				let returnVal = {
+					id: $$(this).attr('data-id'),
+					video: $$(this).attr('data-supporting-video'),
+					audio: $$(this).attr('data-supporting-audio')
+				}
+				console.log(returnVal);
+			});
+			$$(pageIDs.watchFileVirtualList).on('swipeout:delete', 'li', function () {
+				let fileID = $$(this).attr('data-id');
+				ipcRenderer.send(globals.systemEventNames.WATCH_FILE_MANUALLY_REMOVED, fileID);
+			});
+
 			// console.log("Virtual List Created");
 		}
 
@@ -194,6 +214,7 @@
 		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
 			changePageTitle(`${appname} - v${version}`);
 			CreateWatchList();
+			toggleWatching();
 		});
 
 		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {

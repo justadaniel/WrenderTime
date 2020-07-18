@@ -50,6 +50,9 @@ var app = new Framework7({
     popup: {
         closeByBackdropClick: false,
     },
+    swipeout: {
+        removeElements: false
+    },
     // App root data
     data: function () {
         return {
@@ -159,6 +162,19 @@ app.on('connection', (isOnline) => {
     }
 });
 
+$$(document).on('mousedown', function (e) {
+
+    // app.swipeoutOpen();
+    if (e.button == 2) {
+        var _index = e.path.findIndex((arg => arg.className == 'swipeout'));
+
+        if (_index >= 0) {
+            app.swipeout.open(e.path[_index], "right", function () {
+
+            });
+        }
+    }
+});
 
 
 

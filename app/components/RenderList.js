@@ -10,11 +10,7 @@ const chokidar = require("chokidar");
 const RenderFile = require("./RenderFile.js");
 var fs = require("fs"); //Load the filesystem module
 var path = require("path");
-
-
-
-const AudioFileExtensions = ["aac", "mp3", "wav"];
-const VideoFileExtensions = ["m4v", "mov", "mp4", "avi", "flv", "mkv"];
+const { Console } = require('console');
 
 
 const FILE_TYPE = {
@@ -67,32 +63,64 @@ var RenderList = class RenderList extends EventEmitter {
 	}
 
 
+	/**
+	 * @param {string} path the file path
+	 * @returns {boolean} true if exists
+	 */
+	Exists(path) {
+		let _index = this.items.findIndex((obj => obj.pretty_name == RenderFile.GetPrettyName(path)));
+		return this.items[_index] !== null && this.items[_index] !== undefined;
+	}
+
+	/**
+	 * Adds a file to the list based on it's path.
+	 * @param {string} path the file path
+	 */
 	Add(path) {
-		let newItem = new RenderFile(path);
-		// console.log(`Added: \"${newItem.file}\"`);
-		this.items.push(newItem);
-		console.log(`List increased to \"${this.items.length}\"`);
+		if (!this.Exists(path)) {
+			let _newItem = new RenderFile(path);
+
+
+			if (_newItem.HasEncoderID()) {
+				_newItem.AddSupportFile(path);
+			}
+
+			this.items.unshift(_newItem);
+		} else {
+			let _index = this.GetIndexByPrettyName(path);
+			let _currentFile = this.items[_index];
+
+			if (RenderFile.HasEncoderID(path)) {
+				_currentFile.AddSupportFile(path);
+			} else {
+				_currentFile.SetMainFile(path);
+			}
+		}
 	}
 
 	Change(path) {
-		console.log(`Changed \"${path}\"`);
-		let _tempFile = new RenderFile(path);
-		let _index = this.items.findIndex((obj => obj.file == _tempFile.file));
-		// let _index2 = RenderFile.getIndexByPath(path);
+		console.log(`File: ${path}`);
 
-		// console.log(`Normal Index: ${_index}`);
-		// console.log(`Better Index: ${_index2}`);
+		if (this.Exists(path)) {
+			console.log(`Changed \"${path}\"`);
+			let _index = this.GetIndexByPrettyName(path);
+			let _changedFile = this.items[_index];
+			_changedFile.Refresh();
 
-
-		if (this.items[_index] != null) {
-			this.items[_index].Refresh();
+			if (_changedFile.ShouldNotifyComplete()) {
+				_changedFile.Notify();
+				this.emit(globals.systemEventNames.RENDER_FINISHED, _changedFile);
+			}
 		}
 	}
 
 	Remove(path) {
-		// console.log(`Removed: \"${file}\"`);
-		this.items.splice(this.items.findIndex((obj => obj.file == file)), 1);
-		console.log(`List decreased to \"${this.items.length}\"`);
+		if (!RenderFile.HasEncoderID(path)) {
+			this.RemoveFileByName(path);
+			console.log(`Removed: \"${path}\"`);
+		} else {
+			console.log(`Wanted to remove: \"${path}\"`);
+		}
 	}
 
 	Clear() {
@@ -101,18 +129,43 @@ var RenderList = class RenderList extends EventEmitter {
 		console.log("Items Cleared");
 	}
 
-	RemoveByPath(path) {
-		this.items.splice(this.items.findIndex((obj => obj.file == path)), 1);
+	RemoveFileByName(name) {
+		var _index = this.GetIndexByPrettyName(name);
+		this.emit(globals.systemEventNames.WATCH_LIST_UPDATED, this.items);
+		return this.items.splice(_index, 1);
 	}
 
 	RemoveFileByPath(path) {
-		var _index = RenderFile.getIndexByPath(this.items, path);
+		var _index = this.GetIndexByPath(path);
+		this.emit(globals.systemEventNames.WATCH_LIST_UPDATED, this.items);
 		return this.items.splice(_index, 1);
 	}
 
 	GetIndexByPath(path) {
 		return this.items.findIndex((obj => obj.file === path));
 	}
+	GetIndexByPrettyName(path) {
+		return this.items.findIndex((obj => obj.pretty_name === RenderFile.GetPrettyName(path)));
+	}
+	/**
+	 * Gets RenderFile from RenderList using the full file name.
+	 * @param {string} path path to file
+	 * @returns {RenderFile} file in list
+	 */
+	GetFileByPath(path) {
+		let _index = this.GetIndexByPath(path);
+		return this.items[_index];
+	}
+	/**
+	 * Gets RenderFile from RenderList using the "Pretty Name"
+	 * @param {string} path path to file
+	 * @returns {RenderFile} file in list
+	 */
+	GetFileByPrettyName(path) {
+		let _index = this.GetIndexByPrettyName(path);
+		return this.items[_index];
+	}
+
 
 	ProcessFile(watchEvent, path, callback = function () { }) {
 		if (!RenderList.IsSupportedFileType(path)) return;
@@ -125,7 +178,8 @@ var RenderList = class RenderList extends EventEmitter {
 				this.Change(path);
 				break;
 			case RenderList.WatchEvents.UNLINK:
-				this.RemoveByPath(path);
+				this.Remove(path);
+				// console.log(`Wanted to unlink ${path}`);
 				break;
 			default:
 				console.log(`\"${watchEvent}\" not added to switch`);
