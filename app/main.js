@@ -209,8 +209,8 @@ else {
 
 
 function OnAppReady() {
-    // utilities.ShowNotification("App Ready");
-    console.log("App Ready");
+    utilities.ShowNotification("App Running");
+    // console.log("App Ready");
 }
 
 let preferencesWindow;
