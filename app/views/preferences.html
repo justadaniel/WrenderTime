@@ -87,17 +87,25 @@
 								</div>
 								<div class="list simple-list">
 									<ul>
-										<li>
+										<li class="inop-tooltip disabled">
 											<span>Start with System</span>
 											<label class="toggle toggle-init" id="start-with-system-toggle">
 												<input type="checkbox" name="start-with-system-toggle" />
 												<span class="toggle-icon"></span>
 											</label>
 										</li>
-										<li>
+										<li class="inop-tooltip disabled">
 											<span>Start Watching on App Load</span>
 											<label class="toggle toggle-init" id="start-watching-on-load">
-												<input type="checkbox" name="start-watching-on-load" />
+												<input type="checkbox" class="inop-tooltip"
+													name="start-watching-on-load" />
+												<span class="toggle-icon"></span>
+											</label>
+										</li>
+										<li>
+											<span>Show Notification When App is Started</span>
+											<label class="toggle toggle-init" id="notification-on-app-ready">
+												<input type="checkbox" name="notification-on-app-ready" />
 												<span class="toggle-icon"></span>
 											</label>
 										</li>
@@ -228,6 +236,11 @@
 			}
 		}
 
+		var inopTooltip = app.tooltip.create({
+			targetEl: '.inop-tooltip',
+			text: 'Doesn\'t Work Yet',
+		});
+
 		var wereSettingsModifiedFromLastSaved = false;
 
 		document.addEventListener('DOMContentLoaded', PopulateSettings);
@@ -236,7 +249,8 @@
 			var generalFormData = {
 				"watch-folder-path": Settings.General.watchFolderLocation.Get(),
 				"start-with-system-toggle": [(Settings.General.runOnSystemStart.Get() == true) ? "on" : "off"],
-				"start-watching-on-load": [(Settings.General.startWatchingImmediately.Get() == true) ? "on" : "off"]
+				"start-watching-on-load": [(Settings.General.startWatchingImmediately.Get() == true) ? "on" : "off"],
+				"notification-on-app-ready": [(Settings.General.showNotificationOnAppReady.Get() == true) ? "on" : "off"]
 			}
 			app.form.fillFromData(elementIDs.generalSettingsForm, generalFormData);
 
@@ -266,6 +280,7 @@
 
 			Settings.General.runOnSystemStart.Set(generalFormData["start-with-system-toggle"] == "on");
 			Settings.General.startWatchingImmediately.Set(generalFormData["start-watching-on-load"] == "on");
+			Settings.General.showNotificationOnAppReady.Set(generalFormData["notification-on-app-ready"] == "on");
 
 			Settings.Services.IFTTT.serviceEnabled.Set(servicesFormData["ifttt-service-enabled"] == "on");
 			Settings.Services.IFTTT.apiKey.Set(servicesFormData["ifttt-api-key"]);

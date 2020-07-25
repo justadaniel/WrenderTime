@@ -223,10 +223,10 @@ else {
 
 
 function OnAppReady() {
-    if (silentBoot)
-        console.log("App Ready");
-    else
+    if (Settings.General.showNotificationOnAppReady.Get() == true)
         utilities.ShowNotification("App Running");
+    else
+        console.log("App Ready");
 }
 
 

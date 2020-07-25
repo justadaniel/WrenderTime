@@ -18,12 +18,16 @@ settings.configure({
 var Settings = class Settings {
 	static General = {
 		runOnSystemStart: {
-			Get: () => Settings.Get("run-on-system-start"),
+			Get: () => Settings.Get("run-on-system-start", false),
 			Set: (value) => Settings.Set("run-on-system-start", value)
 		},
 		startWatchingImmediately: {
-			Get: () => Settings.Get("start-watching-immediately"),
+			Get: () => Settings.Get("start-watching-immediately", false),
 			Set: (value) => Settings.Set("start-watching-immediately", value)
+		},
+		showNotificationOnAppReady: {
+			Get: () => Settings.Get("notification-on-app-ready", true),
+			Set: (value) => Settings.Set("notification-on-app-ready", value)
 		},
 		watchFolderLocation: {
 			Get: () => Settings.Get("watch-folder-path"),
