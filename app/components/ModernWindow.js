@@ -26,9 +26,12 @@ var modernWindow = class ModernWindow extends BrowserWindow {
 			height: 600,
 			frame: false,
 			transparent: true,
-			webPreferences: {
-				nodeIntegration: true,
-			},
+			// webPreferences: {
+			// 	nodeIntegration: false,
+			// 	enableRemoteModule: false,
+			// 	contextIsolation: true,
+			// 	sandbox: true
+			// },
 			// alwaysOnTop: true,
 			// resizable: false,
 		};

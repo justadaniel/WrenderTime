@@ -16,11 +16,19 @@ var globals = {
         RENDER_FINISHED: "render-finished",
         FILE_RENDER_FINISHED: "file-render-finished",
         OPEN_PREFERENCES: "open-preferences",
-        CHECK_FOR_UPDATES: "check-for-updates"
+        APPLY_PREFERENCES: "apply-preferences",
+        CLOSE_PREFERENCES: "close-preferences",
+        CHECK_FOR_UPDATES: "check-for-updates",
+        SELECT_DIRECTORY: "select-directory",
+        DIRECTORY_SELECTED: "directory-selected"
     },
     supportedFileTypes: {
         video: ["m4v", "mov", "mp4", "avi", "flv", "mkv"],
         audio: ["aac", "mp3", "wav"]
+    },
+    urls: {
+        github: "https://github.com/justadaniel/WrenderTime",
+        github_issues: "https://github.com/justadaniel/WrenderTime/issues"
     }
 };
 

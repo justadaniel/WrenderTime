@@ -109,8 +109,9 @@ var utils = {
         };
         options = Object.assign(defaults, options);
 
+        console.log(`Alert: \'${message}\'`);
         let response = dialog.showMessageBoxSync(options);
-        console.log(message);
+        console.log(`User Responded with \'${options.buttons[response]}\'`);
 
         return response;
     },

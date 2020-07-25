@@ -21,6 +21,7 @@
 		const utils = require("../components/Utilities.js");
 		const globals = require("../components/Globals.js");
 		const RenderFile = require("../components/RenderFile.js");
+		const Settings = require("../components/Settings.js");
 		const appname = remote.app.getName();
 		const version = remote.app.getVersion();
 	</script>
@@ -37,7 +38,7 @@
 						<i class="f7-icons">bars</i>
 					</a>
 					<a class="button button-small display-flex margin-left-half">
-						<i class="f7-icons">arrowshape_turn_up_left_fill</i>
+						<i class="f7-icons">gear_alt</i>
 					</a>
 					<a class="button button-small display-flex margin-left-half">
 						<i class="f7-icons">arrowshape_turn_up_left_2_fill</i>
@@ -85,11 +86,12 @@
 			</div>
 		</div>
 
-		<div class="popover popover-devtools">
+		<div class="popover popover-menu">
 			<div class="popover-inner">
 				<div class="list">
 					<ul>
-						<li><a class="list-button item-link toggle-devtools" href="#">Toggle DevTools</a></li>
+						<li><a class="list-button item-link popover-close open-settings" href="#">Settings</a></li>
+						<!-- <li><a class="list-button item-link popover-close toggle-devtools" href="#">Toggle DevTools</a></li> -->
 					</ul>
 				</div>
 			</div>
@@ -122,6 +124,7 @@
 
 
 
+		$$('.open-settings').on('click', OpenSettings);
 
 		const pageIDs = {
 			form: "#my-form",
@@ -203,7 +206,7 @@
 
 		function toggleWatching() {
 			var formData = app.form.convertToData(pageIDs.form);
-			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, formData.watchdir);
+			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, Settings.General.watchFolderLocation.Get());
 		}
 
 		document.addEventListener('DOMContentLoaded', () => {
@@ -214,7 +217,7 @@
 		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
 			changePageTitle(`${appname} - v${version}`);
 			CreateWatchList();
-			toggleWatching();
+			// toggleWatching();
 		});
 
 		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {
@@ -240,6 +243,11 @@
 				watchFilesVirtualList.update();
 			}
 		});
+
+
+		function OpenSettings() {
+			ipcRenderer.send(globals.systemEventNames.OPEN_PREFERENCES, {});
+		}
 	</script>
 </body>
 

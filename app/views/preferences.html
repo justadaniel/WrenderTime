@@ -1,70 +1,291 @@
-<!-- Initial Page, "data-name" contains page name -->
-<div data-name="main" class="page">
+<!DOCTYPE html>
+<html>
 
-	<!-- Top Navbar -->
-	<div class="navbar">
-		<div class="navbar-bg"></div>
-		<div class="navbar-inner">
-			<div class="left">
-				<a href="#" class="link icon-only disabled">
-					<i class="icon f7-icons">home</i>
-					<!-- <span class="if-not-md">Dashboard</span> -->
-				</a>
-			</div>
-			<div class="title">Preferences</div>
-			<div class="right">
-				<a href="/localization/import_popup/" class="link icon-only">
-					<i class="icon f7-icons">square_arrow_down</i>
-				</a>
-				<a href="/localization/save_to_location/" class="link icon-only">
-					<i class="icon f7-icons">square_arrow_up</i>
-				</a>
-				<a href="/left-panel/" class="link icon-only">
-					<i class="icon f7-icons">plus</i>
-				</a>
-			</div>
-			<!-- <div class="title-large">
-							<div class="title-large-text">
-								<script type="text/javascript">document.write(appname);</script>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="theme-color" content="#2196f3">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="msapplication-tap-highlight" content="no">
+	<link rel="stylesheet" href="../assets/framework7/css/framework7.bundle.min.css">
+	<link rel="stylesheet" href="../assets/css/icons.css">
+	<link rel="stylesheet" href="../assets/css/app.css">
+	<title>Preferences</title>
+	<script type="text/javascript">
+		const { remote, ipcRenderer } = require("electron");
+		const utils = require("../components/Utilities.js");
+		const globals = require("../components/Globals.js");
+		const Settings = require("../components/Settings.js");
+		const RenderFile = require("../components/RenderFile.js");
+		const IFTTT = require("../components/services/IFTTT.js");
+		const appname = remote.app.getName();
+		const version = remote.app.getVersion();
+	</script>
+</head>
+
+<body>
+	<!-- App root element -->
+	<div id="app">
+		<div class="view view-preferences safe-areas">
+			<!-- Initial Page, "data-name" contains page name -->
+			<div data-name="preferences" class="page">
+
+				<!-- Top Navbar -->
+				<div class="navbar">
+					<div class="navbar-bg"></div>
+					<div class="navbar-inner">
+						<div class="left"><a href="#" onclick="location.reload()" class="link icon-only">
+								<i class="icon f7-icons">arrow_clockwise</i>
+							</a>
+						</div>
+						<div class="title">Settings</div>
+						<div class="right">
+							<a href="#" class="link save-settings">Save</a>
+						</div>
+						<div class="subnavbar">
+							<div class="subnavbar-inner">
+								<div class="segmented  segmented-strong">
+									<a class="button tab-link tab-link-active" href="#tab-general">General</a>
+									<a class="button tab-link" href="#tab-output">Output</a>
+									<a class="button tab-link" href="#tab-other">Other</a>
+								</div>
 							</div>
-						</div> -->
-		</div>
-	</div>
-
-	<!-- Bottom Toolbar -->
-	<div class="toolbar toolbar-bottom">
-		<div class="toolbar-inner">
-			<!-- Toolbar links -->
-			<a href="#" class="link">Link 1</a>
-			<a href="#" class="link">Link 2</a>
-		</div>
-	</div>
-	<!-- Scrollable page content -->
-	<div class="page-content">
-		<form class="list" id="my-form">
-			<ul>
-				<li class="item-content item-input">
-					<!-- <div class="item-media">... icon/image here ...</div> -->
-					<div class="item-inner">
-						<div class="item-title item-label">Watch Directory</div>
-						<div class="item-input-wrap">
-							<input type="text" name="watchDirectory" value="D:\GCC\_Exported" />
-							<span class="input-clear-button"></span>
 						</div>
 					</div>
-				</li>
-			</ul>
-		</form>
-		<!-- <h3>
-						<script type="text/javascript">document.write(version);</script>
-					</h3>
-					<p>
-						<span style="color:red;"><b>WARNING:</b> This is a prototype!</span>
-					</p><input id="watchDirectory" type="text" placeholder="Watch Directory" value="D:\GCC\_Exported" />
-					<br />
-					<button id="toggleButton" onclick="toggleWatching()">Start</button>
-					<h4>Output</h4>
-					<p id="readout"></p>
-		<a href="/about/">About app</a> -->
+				</div>
+
+				<div class="tabs-animated-wrap">
+					<div class="tabs">
+						<!-- GENERAL TAB -->
+						<div id="tab-general" class="page-content tab tab-active">
+							<div class="block-title">General</div>
+							<form class="list" id="general-settings">
+								<ul>
+									<li class="item-content item-input item-input-with-info">
+										<div class="item-inner">
+											<div class="item-title item-label">Watch Directory</div>
+											<div class="item-input-wrap">
+												<input type="text" name="watch-folder-path" placeholder="C:\sad\sadsa"
+													required validate data-error-message="A directory is required" />
+												<div class="item-input-info">This is required</div>
+											</div>
+										</div>
+									</li>
+									<li>
+										<a class="list-button open-directory-select-dialog"
+											data-directory-output="input[name='watch-folder-path']">Choose Directory</a>
+									</li>
+								</ul>
+							</form>
+						</div>
+						<!-- SERVICES TAB -->
+						<div id="tab-output" class="page-content tab">
+
+							<div class="block-title">Services</div>
+							<div class="list accordion-list">
+								<ul>
+									<li class="accordion-item"><a href="#" class="item-content item-link">
+											<div class="item-inner">
+												<div class="item-title">IFTTT</div>
+												<div class="item-subtitle" id="ifttt-service-status">Disabled</div>
+											</div>
+										</a>
+										<div class="accordion-item-content">
+											<form class="list" id="output-settings">
+												<ul>
+													<li>
+														<div class="item-content">
+															<div class="item-inner">
+																<div class="item-title">IFTTT Enabled</div>
+																<div class="item-after">
+																	<label id="ifttt-service-enabled-toggle"
+																		class="toggle toggle-init service-toggle"
+																		data-linked-service-status="#ifttt-service-status">
+																		<input type="checkbox"
+																			name="ifttt-service-enabled" value="yes"><i
+																			class="toggle-icon"></i>
+																	</label>
+																</div>
+															</div>
+														</div>
+													</li>
+													<li class="item-content item-input item-input-with-info">
+														<div class="item-inner">
+															<div class="item-title item-label">API Key</div>
+															<div class="item-input-wrap">
+																<input name="ifttt-api-key" type="password"
+																	placeholder="API Key" required validate
+																	pattern="([a-zA-Z0-9_.-]*)" minlength="22"
+																	maxlength="22"
+																	data-error-message="Should only contain numbers and letters" />
+															</div>
+															<div class="item-after">
+																<a href="#" class="button password-mask-toggle"
+																	id="ifttt-api-key-mask-toggle"
+																	data-field="input[name='ifttt-api-key']">Show</a>
+															</div>
+														</div>
+													</li>
+												</ul>
+											</form>
+											<div class="block">
+												<p class="row">
+													<a href="#" id="ifttt-test-button"
+														class="col button button-large button-raised button-fill">Test</a>
+												</p>
+
+											</div>
+											<div class="block block-strong row">
+												<div class="col"><a class="button convert-form-to-data" href="#">Get
+														Data</a></div>
+												<div class="col"><a class="button fill-form-from-data" href="#">Fill
+														Form</a></div>
+											</div>
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<!-- OTHER TAB -->
+						<div id="tab-other" class="page-content tab">
+							<form class="list" id="other-settings">
+								<ul>
+									<li>
+										<div class="item-content">
+											<div class="item-inner">
+												<div class="item-title">Enabled</div>
+												<div class="item-after">
+													<label class="toggle toggle-init">
+														<input type="checkbox" name="toggle" value="yes"><i
+															class="toggle-icon"></i>
+													</label>
+												</div>
+											</div>
+										</div>
+									</li>
+								</ul>
+							</form>
+							<div class="block">
+								<p>Save File Location:
+									<script type="text/javascript">document.write(Settings.GetSettingsFile())</script>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
-</div>
+	<script src="../assets/framework7/js/framework7.bundle.min.js"></script>
+	<script src="../assets/js/routes.js"></script>
+	<!-- <script src="../assets/js/dropzone.js"></script> -->
+	<script src="../assets/js/app.js"></script>
+	<script type="text/javascript">
+		var preferencesView = app.views.create('.view-preferences', {
+			url: '/',
+			main: true,
+			masterDetailBreakpoint: 800,
+			// routes: localization_routes
+		});
+
+		const elementIDs = {
+			generalSettingsForm: "form#general-settings",
+			outputSettingsForm: "form#output-settings",
+			watchFolderPath: "input[name='watch-folder-path']",
+			ifttt: {
+				serviceEnabledToggle: "input[name='ifttt-service-enabled']",
+				apiKeyField: "input[name='ifttt-api-key']",
+				apiKeyMaskToggle: "#ifttt-api-key-mask-toggle",
+				serviceStatusLabel: "#ifttt-service-status",
+				testButton: "#ifttt-test-button"
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', PopulateSettings);
+
+		function PopulateSettings() {
+			var generalFormData = {
+				"watch-folder-path": Settings.General.watchFolderLocation.Get(),
+				// "run": false
+			}
+			app.form.fillFromData(elementIDs.generalSettingsForm, generalFormData);
+
+			var servicesFormData = {
+				"ifttt-service-enabled": [(Settings.Services.IFTTT.serviceEnabled.Get() == true) ? "yes" : "no"],
+				"ifttt-api-key": Settings.Services.IFTTT.apiKey.Get()
+			}
+			app.form.fillFromData(elementIDs.outputSettingsForm, servicesFormData);
+		}
+
+		function ApplySettings() {
+			let generalFormData = app.form.convertToData(elementIDs.generalSettingsForm);
+			let servicesFormData = app.form.convertToData(elementIDs.outputSettingsForm);
+
+			let mustRestart = false;
+
+			// if (Settings.General.watchFolderLocation.Get() != generalFormData["watch-folder-path"]) {
+			// 	Settings.General.watchFolderLocation.Set(generalFormData["watch-folder-path"]);
+			// 	mustRestart = true;
+			// }
+
+			if (Settings.General.watchFolderLocation.Set(generalFormData["watch-folder-path"]))
+				mustRestart = true;
+
+			Settings.Services.IFTTT.serviceEnabled.Set(servicesFormData["ifttt-service-enabled"] == "yes");
+			Settings.Services.IFTTT.apiKey.Set(servicesFormData["ifttt-api-key"]);
+
+			const logText = `Settings Applied (Must Restart: ${mustRestart})`;
+			console.log(logText);
+			app.dialog.alert(logText);
+		}
+
+		$$('.save-settings').on('click', ApplySettings);
+
+		$$(elementIDs.ifttt.apiKeyField).on("change", function (e) {
+			let isInvalid = $$(this).hasClass("input-invalid");
+			// console.log();
+		});
+
+		$$(elementIDs.ifttt.testButton).on('click', function () {
+			var formData = app.form.convertToData(elementIDs.outputSettingsForm);
+
+			IFTTT.SendRequest("wrender_finished", formData["ifttt-api-key"], {
+				value1: 'This is only a test. If you see this, then it worked!',
+				value2: "https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/14112506/Pembroke-Welsh-Corgi-standing-outdoors-in-the-fall.jpg"
+			});
+			app.dialog.alert("Test request was sent!");
+		});
+
+		$$('.convert-form-to-data').on('click', function () {
+			var generalFormData = app.form.convertToData(elementIDs.generalSettingsForm);
+			// var servicesFormData = app.form.convertToData(elementIDs.outputSettingsForm);
+			app.dialog.alert(JSON.stringify(generalFormData));
+		});
+
+		$$('.fill-form-from-data').on('click', function () {
+
+			var formData = {
+				"ifttt-service-enabled": [(Settings.Services.IFTTT.serviceEnabled.Get() == true) ? "yes" : "no"],
+				"ifttt-api-key": Settings.Services.IFTTT.apiKey.Get()
+			}
+			app.form.fillFromData(elementIDs.outputSettingsForm, formData);
+		});
+
+		ipcRenderer.on(globals.systemEventNames.CLOSE_PREFERENCES, (event, args) => {
+			if (args.applySettings == true) {
+				ApplySettings();
+			}
+
+			setTimeout(ipcRenderer.send(globals.systemEventNames.CLOSE_PREFERENCES), 1000);
+		});
+
+		ipcRenderer.on(globals.systemEventNames.APPLY_PREFERENCES, ApplySettings);
+	</script>
+</body>
+
+</html>

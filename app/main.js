@@ -6,7 +6,9 @@ const {
     Tray,
     webContents,
     ipcMain,
-    EventEmitter
+    dialog,
+    EventEmitter,
+    shell
 } = require("electron");
 const path = require("path");
 // const rq = require("./components/electron-require.js");
@@ -17,6 +19,7 @@ const chokidar = require("chokidar");
 const { menubar } = require("menubar");
 const RenderList = require("./components/RenderList.js");
 const RenderFile = require("./components/RenderFile.js");
+const Settings = require("./components/Settings.js");
 const IFTTT = require("./components/services/IFTTT.js");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
@@ -24,34 +27,106 @@ const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate
 const isStandaloneWindow = false;
 let mb = null;
 let mainWindow = null;
-let startWatchingOnBoot = true;
+let startWatchingOnBoot = false;
 let isWatching = false;
-
 let tray;
 
 const RENDER_LIST = new RenderList();
+const isMac = process.platform === 'darwin';
 
+const contextMenu = Menu.buildFromTemplate([
+    {
+        label: "Preferences...", type: "normal",
+        click: async () => {
+            OpenPreferences();
+        }
+    },
+    { label: "About", type: "normal", role: "about" },
+    { label: "Separator", type: "separator" },
+    {
+        label: "Quit", type: "normal", click: (menuItem, browserWindow, event) => {
 
-
+            utilities.RequestQuit(function () {
+                utilities.StopWatch();
+            });
+        }
+    },
+]);
+const appMenu = Menu.buildFromTemplate([
+    // { role: 'appMenu' }
+    ...(isMac ? [{
+        label: app.name,
+        submenu: [
+            { role: 'about' },
+            {
+                label: "Preferences...",
+                accelerator: "CommandOrControl+,",
+                click: async () => {
+                    OpenPreferences();
+                }
+            },
+            {
+                label: "Check for Updates...",
+                click: async () => {
+                    await shell.openExternal(globals.urls.github_issues)
+                }
+            },
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideothers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' }
+        ]
+    }] : []),
+    {
+        label: 'File',
+        submenu: [
+            { role: 'about' },
+            { type: 'separator' },
+            {
+                label: "Preferences...",
+                accelerator: "CommandOrControl+,",
+                click: async () => {
+                    OpenPreferences();
+                }
+            },
+            {
+                label: "Check for Updates...",
+                click: async () => {
+                    await shell.openExternal(globals.urls.github_issues)
+                }
+            },
+            { type: 'separator' },
+            isMac ? { role: 'close' } : { role: 'quit' }
+        ]
+    },
+    {
+        role: 'help',
+        submenu: [
+            {
+                label: 'Github Repository',
+                click: async () => {
+                    await shell.openExternal(globals.urls.github)
+                }
+            },
+            {
+                label: 'Submit Issue',
+                click: async () => {
+                    await shell.openExternal(globals.urls.github_issues)
+                }
+            }
+        ]
+    }
+]);
 
 if (!isStandaloneWindow) {
-
     app.on("ready", function () {
 
         tray = new Tray(iconPath);
-        const contextMenu = Menu.buildFromTemplate([
-            { label: "Preferences", type: "normal" },
-            { label: "About", type: "normal", role: "about" },
-            { label: "Separator", type: "separator" },
-            {
-                label: "Quit", type: "normal", click: (menuItem, browserWindow, event) => {
 
-                    utilities.RequestQuit(function () {
-                        utilities.StopWatch();
-                    });
-                }
-            },
-        ]);
         tray.setContextMenu(contextMenu);
 
         mb = menubar({
@@ -72,7 +147,7 @@ if (!isStandaloneWindow) {
         mb.app.commandLine.appendSwitch("disable-backgrounding-occluded-windows", "true");//could be a performance hit
 
         mb.on("ready", () => {
-            utilities.ShowNotification("App Ready");
+            OnAppReady();
         });
 
         // mb.on("after-create-window", () => {
@@ -94,6 +169,7 @@ else {
             }
         });
         // mainWindow.removeMenu();
+        Menu.setApplicationMenu(appMenu);
 
         // and load the index.html of the app.
         mainWindow.loadFile(utilities.GetView("index.html"));
@@ -112,8 +188,7 @@ else {
             // dock icon is clicked and there are no other windows open.
             if (BrowserWindow.getAllWindows().length === 0) {
                 createWindow();
-
-                utilities.ShowNotification("App Ready");
+                OnAppReady();
             }
         });
     });
@@ -131,9 +206,18 @@ else {
     // code. You can also put them in separate files and require them here.
 }
 
+
+
+function OnAppReady() {
+    // utilities.ShowNotification("App Ready");
+    console.log("App Ready");
+}
+
 let preferencesWindow;
-function OpenPreferences() {
-    preferencesWindow = new ModernWindow({
+let preferencesWindowShouldClose = false;
+
+function CreatePreferencesWindow() {
+    let _preferencesWindow = new ModernWindow({
         width: 400,
         transparent: false,
         frame: true,
@@ -142,12 +226,50 @@ function OpenPreferences() {
             preload: path.join(__dirname, "preload.js")
         }
     });
-    preferencesWindow.removeMenu();
-    preferencesWindow.loadFile(utilities.GetView("index.html"));
+    _preferencesWindow.removeMenu();
+    _preferencesWindow.loadFile(utilities.GetView("preferences.html"));
+    // _preferencesWindow.webContents.openDevTools();
+
+    _preferencesWindow.on('close', function (e) {
+        if (!preferencesWindowShouldClose) {
+            e.preventDefault();
+            ClosePreferences();
+        } else {
+
+        }
+
+        // console.log(e);
+    });
+
+    return _preferencesWindow;
 }
 
+function OpenPreferences() {
+    preferencesWindowShouldClose = false;
+    if (preferencesWindow == null || preferencesWindow == undefined || preferencesWindow == '') {
+        preferencesWindow = CreatePreferencesWindow();
 
+        preferencesWindow.once('ready-to-show', () => {
+            preferencesWindow.show();
+        });
+    } else {
+        preferencesWindow.show();
+    }
+}
 
+function ClosePreferences() {
+    var choice = utilities.ShowAlert('Would you like to apply these settings?',
+        {
+            type: 'question',
+            buttons: ['Yes', 'No', 'Cancel'],
+            title: 'Confirm'
+        });
+
+    if (choice !== 2) {
+        preferencesWindowShouldClose = true;
+        preferencesWindow.webContents.send(globals.systemEventNames.CLOSE_PREFERENCES, { applySettings: choice === 0 });
+    }
+}
 
 
 
@@ -176,10 +298,13 @@ RENDER_LIST.on(globals.systemEventNames.WATCH_LIST_UPDATED, function (items) {
 
 RENDER_LIST.on(globals.systemEventNames.RENDER_FINISHED, function (file) {
     utilities.ShowNotification(`Finished Rendering: ${file.pretty_name}`);
-    IFTTT.SendRequest("wrender_finished", "bG5GBdCHdtzw9HAuWrgqQC", {
-        value1: `\"${file.filename}\" Finished Rendering`,
-        value2: "https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/14112506/Pembroke-Welsh-Corgi-standing-outdoors-in-the-fall.jpg"
-    });
+
+    if (Settings.Services.IFTTT.serviceEnabled.Get() == true) {
+        IFTTT.SendRequest("wrender_finished", Settings.Services.IFTTT.apiKey.Get(), {
+            value1: `\"${file.filename}\" Finished Rendering`,
+            value2: "https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/14112506/Pembroke-Welsh-Corgi-standing-outdoors-in-the-fall.jpg"
+        });
+    }
 });
 
 function UpdateWatchList() {
@@ -208,9 +333,25 @@ ipcMain.on(globals.systemEventNames.TOGGLE_WATCH, (event, dir) => {
     // UpdateWatchListStatus(event);
 });
 
-
 ipcMain.on(globals.systemEventNames.REQUEST_QUIT, (event) => {
     utilities.RequestQuit(function () {
         RENDER_LIST.StopWatching();
     });
+});
+
+ipcMain.on(globals.systemEventNames.OPEN_PREFERENCES, (e) => {
+    OpenPreferences();
+});
+
+ipcMain.on(globals.systemEventNames.CLOSE_PREFERENCES, (e) => {
+    preferencesWindow.close();
+    preferencesWindow = null;
+});
+
+ipcMain.on(globals.systemEventNames.SELECT_DIRECTORY, async (event, args) => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory']
+    });
+    args = Object.assign(result, args);
+    event.reply(globals.systemEventNames.DIRECTORY_SELECTED, args);
 });

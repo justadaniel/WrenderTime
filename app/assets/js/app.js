@@ -176,7 +176,37 @@ $$(document).on('mousedown', function (e) {
     }
 });
 
+$$(".password-mask-toggle").on('click', function () {
+    let fieldName = $$(this).attr("data-field");
+    let isMasked = $$(fieldName).attr("type") == "password";
+    $$(fieldName).attr("type", (isMasked) ? "text" : "password");
+    $$(this).text((isMasked) ? "Hide" : "Show");
+});
 
+$$(".toggle.service-toggle").on('change', function (e) {
+    let linkedServiceStatus = $$(this).attr("data-linked-service-status");
+    $$(linkedServiceStatus).text((e.target.checked) ? "Enabled" : "Disabled");
+    $$(linkedServiceStatus).booleanToggleClass(e.target.checked, "text-color-green", "text-color-red");
+});
+
+
+$$('.open-directory-select-dialog').on('click', function (e) {
+    let linkedPathOutput = $$(this).attr("data-directory-output");
+    ipcRenderer.send(globals.systemEventNames.SELECT_DIRECTORY, {
+        linkedPathOutput: linkedPathOutput
+    });
+});
+ipcRenderer.on(globals.systemEventNames.DIRECTORY_SELECTED, (event, args) => {
+    if (args.linkedPathOutput != null && args.linkedPathOutput != undefined && args.linkedPathOutput != '')
+        $$(args.linkedPathOutput).val(args.filePaths[0]);
+});
+
+Dom7.fn.booleanToggleClass = function (booleanValue, classIfTrue, classIfFalse) {
+    if ($$(this).hasClass((booleanValue) ? classIfFalse : classIfTrue))
+        $$(this).removeClass((booleanValue) ? classIfFalse : classIfTrue);
+
+    $$(this).addClass((booleanValue) ? classIfTrue : classIfFalse);
+}
 
 function UpdateAppTheme(isInterfaceDark = false) {
     let themeString = (isInterfaceDark) ? "dark" : "light";

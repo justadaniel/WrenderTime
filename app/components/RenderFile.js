@@ -24,6 +24,8 @@ const FILE_TYPE = {
 	UNKNOWN: "Unknown"
 }
 
+const AME_ID_REGEX = /(?<=\.)\d+\.\d+/g;
+
 var RenderFile = class RenderFile extends EventEmitter {
 	file = null;
 	supportingVideoFile = null;
@@ -76,8 +78,8 @@ var RenderFile = class RenderFile extends EventEmitter {
 		this.isvideo = globals.supportedFileTypes.video.includes(this.file_extension);
 		this.isaudio = globals.supportedFileTypes.audio.includes(this.file_extension);
 
-		const ameIDRegex = /(\d+\.\d+)/g;
-		this.pretty_name = path.basename(filepath).replace(ameIDRegex, "").replace(`.${this.file_extension}`, "").replace(/\.$/, "");
+		// const ameIDRegex = /(\d+\.\d+)/g;
+		this.pretty_name = path.basename(filepath).replace(AME_ID_REGEX, "").replace(`.${this.file_extension}`, "").replace(/\.$/, "");
 
 		if (this.supportingAudioFile !== null && this.supportingAudioFile !== undefined)
 			this.ameID = RenderFile.GetEncoderID(this.supportingAudioFile);
@@ -127,8 +129,8 @@ var RenderFile = class RenderFile extends EventEmitter {
 	}
 
 	static GetEncoderID(path) {
-		const ameIDRegex = /(\d+\.\d+)/g;
-		return path.match(ameIDRegex);
+		// const ameIDRegex = /(?<=\.)\d+\.\d+/g;
+		return path.match(AME_ID_REGEX);
 	}
 	static HasEncoderID(path) {
 		return RenderFile.GetEncoderID(path) != null;
@@ -174,7 +176,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 	 * @param {string} filepath The file name
 	 */
 	static GetPrettyName(filepath) {
-		return path.basename(filepath).replace(/(\d+\.\d+)/g, "").replace(`.${RenderFile.GetFileExtension(filepath)}`, "").replace(/\.$/, "");
+		return path.basename(filepath).replace(AME_ID_REGEX, "").replace(`.${RenderFile.GetFileExtension(filepath)}`, "").replace(/\.$/, "");
 	}
 
 	static GetIndexByPath(list, path) {
