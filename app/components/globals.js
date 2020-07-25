@@ -17,6 +17,7 @@ var globals = {
         FILE_RENDER_FINISHED: "file-render-finished",
         OPEN_PREFERENCES: "open-preferences",
         APPLY_PREFERENCES: "apply-preferences",
+        REQUEST_CLOSE_PREFERENCES: "request-close-preferences",
         CLOSE_PREFERENCES: "close-preferences",
         CHECK_FOR_UPDATES: "check-for-updates",
         SELECT_DIRECTORY: "select-directory",

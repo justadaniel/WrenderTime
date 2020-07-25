@@ -43,7 +43,7 @@
 								<i class="icon f7-icons">arrow_clockwise</i>
 							</a>
 						</div>
-						<div class="title">Settings</div>
+						<div class="title">Preferences</div>
 						<div class="right">
 							<a href="#" class="link save-settings">Save</a>
 						</div>
@@ -51,7 +51,7 @@
 							<div class="subnavbar-inner">
 								<div class="segmented  segmented-strong">
 									<a class="button tab-link tab-link-active" href="#tab-general">General</a>
-									<a class="button tab-link" href="#tab-output">Output</a>
+									<a class="button tab-link" href="#tab-services">Services</a>
 									<a class="button tab-link" href="#tab-other">Other</a>
 								</div>
 							</div>
@@ -64,27 +64,49 @@
 						<!-- GENERAL TAB -->
 						<div id="tab-general" class="page-content tab tab-active">
 							<div class="block-title">General</div>
-							<form class="list" id="general-settings">
-								<ul>
-									<li class="item-content item-input item-input-with-info">
-										<div class="item-inner">
-											<div class="item-title item-label">Watch Directory</div>
-											<div class="item-input-wrap">
-												<input type="text" name="watch-folder-path" placeholder="C:\sad\sadsa"
-													required validate data-error-message="A directory is required" />
-												<div class="item-input-info">This is required</div>
+							<form id="general-settings">
+								<div class="list">
+									<ul>
+										<li class="item-content item-input item-input-with-info">
+											<div class="item-inner">
+												<div class="item-title item-label">Watch Directory</div>
+												<div class="item-input-wrap">
+													<input type="text" name="watch-folder-path"
+														placeholder="C:\sad\sadsa" required validate
+														data-error-message="A directory is required" />
+													<div class="item-input-info">This is required</div>
+												</div>
 											</div>
-										</div>
-									</li>
-									<li>
-										<a class="list-button open-directory-select-dialog"
-											data-directory-output="input[name='watch-folder-path']">Choose Directory</a>
-									</li>
-								</ul>
+										</li>
+										<li>
+											<a class="list-button open-directory-select-dialog"
+												data-directory-output="input[name='watch-folder-path']">Choose
+												Directory</a>
+										</li>
+									</ul>
+								</div>
+								<div class="list simple-list">
+									<ul>
+										<li>
+											<span>Start with System</span>
+											<label class="toggle toggle-init" id="start-with-system-toggle">
+												<input type="checkbox" name="start-with-system-toggle" />
+												<span class="toggle-icon"></span>
+											</label>
+										</li>
+										<li>
+											<span>Start Watching on App Load</span>
+											<label class="toggle toggle-init" id="start-watching-on-load">
+												<input type="checkbox" name="start-watching-on-load" />
+												<span class="toggle-icon"></span>
+											</label>
+										</li>
+									</ul>
+								</div>
 							</form>
 						</div>
 						<!-- SERVICES TAB -->
-						<div id="tab-output" class="page-content tab">
+						<div id="tab-services" class="page-content tab">
 
 							<div class="block-title">Services</div>
 							<div class="list accordion-list">
@@ -107,7 +129,7 @@
 																		class="toggle toggle-init service-toggle"
 																		data-linked-service-status="#ifttt-service-status">
 																		<input type="checkbox"
-																			name="ifttt-service-enabled" value="yes"><i
+																			name="ifttt-service-enabled"><i
 																			class="toggle-icon"></i>
 																	</label>
 																</div>
@@ -153,7 +175,7 @@
 						</div>
 						<!-- OTHER TAB -->
 						<div id="tab-other" class="page-content tab">
-							<form class="list" id="other-settings">
+							<!-- <form class="list" id="other-settings">
 								<ul>
 									<li>
 										<div class="item-content">
@@ -169,7 +191,7 @@
 										</div>
 									</li>
 								</ul>
-							</form>
+							</form> -->
 							<div class="block">
 								<p>Save File Location:
 									<script type="text/javascript">document.write(Settings.GetSettingsFile())</script>
@@ -206,23 +228,29 @@
 			}
 		}
 
+		var wereSettingsModifiedFromLastSaved = false;
+
 		document.addEventListener('DOMContentLoaded', PopulateSettings);
 
 		function PopulateSettings() {
 			var generalFormData = {
 				"watch-folder-path": Settings.General.watchFolderLocation.Get(),
-				// "run": false
+				"start-with-system-toggle": [(Settings.General.runOnSystemStart.Get() == true) ? "on" : "off"],
+				"start-watching-on-load": [(Settings.General.startWatchingImmediately.Get() == true) ? "on" : "off"]
 			}
 			app.form.fillFromData(elementIDs.generalSettingsForm, generalFormData);
 
 			var servicesFormData = {
-				"ifttt-service-enabled": [(Settings.Services.IFTTT.serviceEnabled.Get() == true) ? "yes" : "no"],
+				"ifttt-service-enabled": [(Settings.Services.IFTTT.serviceEnabled.Get() == true) ? "on" : "off"],
 				"ifttt-api-key": Settings.Services.IFTTT.apiKey.Get()
 			}
 			app.form.fillFromData(elementIDs.outputSettingsForm, servicesFormData);
+
+			MarkSettingsClean();
 		}
 
 		function ApplySettings() {
+			app.dialog.progress('Applying Settings...');
 			let generalFormData = app.form.convertToData(elementIDs.generalSettingsForm);
 			let servicesFormData = app.form.convertToData(elementIDs.outputSettingsForm);
 
@@ -236,12 +264,30 @@
 			if (Settings.General.watchFolderLocation.Set(generalFormData["watch-folder-path"]))
 				mustRestart = true;
 
-			Settings.Services.IFTTT.serviceEnabled.Set(servicesFormData["ifttt-service-enabled"] == "yes");
+			Settings.General.runOnSystemStart.Set(generalFormData["start-with-system-toggle"] == "on");
+			Settings.General.startWatchingImmediately.Set(generalFormData["start-watching-on-load"] == "on");
+
+			Settings.Services.IFTTT.serviceEnabled.Set(servicesFormData["ifttt-service-enabled"] == "on");
 			Settings.Services.IFTTT.apiKey.Set(servicesFormData["ifttt-api-key"]);
 
-			const logText = `Settings Applied (Must Restart: ${mustRestart})`;
-			console.log(logText);
-			app.dialog.alert(logText);
+
+			setTimeout(function () {
+				app.dialog.close();
+
+				const logText = `Settings Applied (Must Restart: ${mustRestart})`;
+				console.log(logText);
+				MarkSettingsClean();
+				// app.dialog.alert(logText);
+			}, 500);
+		}
+
+		function MarkSettingsClean() {
+			wereSettingsModifiedFromLastSaved = false;
+			// console.log("Settings were marked clean.");
+		}
+		function MarkSettingsDirty() {
+			wereSettingsModifiedFromLastSaved = true;
+			// console.log("Settings were marked dirty.");
 		}
 
 		$$('.save-settings').on('click', ApplySettings);
@@ -249,42 +295,94 @@
 		$$(elementIDs.ifttt.apiKeyField).on("change", function (e) {
 			let isInvalid = $$(this).hasClass("input-invalid");
 			// console.log();
+			MarkSettingsDirty();
 		});
+
+		$$('.toggle').on('change', MarkSettingsDirty);
+		$$('input').on('input', MarkSettingsDirty);
+
 
 		$$(elementIDs.ifttt.testButton).on('click', function () {
 			var formData = app.form.convertToData(elementIDs.outputSettingsForm);
+
+			app.dialog.progress('Sending Test to IFTTT...');
 
 			IFTTT.SendRequest("wrender_finished", formData["ifttt-api-key"], {
 				value1: 'This is only a test. If you see this, then it worked!',
 				value2: "https://s3.amazonaws.com/cdn-origin-etr.akc.org/wp-content/uploads/2017/11/14112506/Pembroke-Welsh-Corgi-standing-outdoors-in-the-fall.jpg"
 			});
-			app.dialog.alert("Test request was sent!");
+
+			setTimeout(function () {
+				app.dialog.close();
+				app.dialog.alert("Test request was sent!");
+			}, 1000);
 		});
 
 		$$('.convert-form-to-data').on('click', function () {
 			var generalFormData = app.form.convertToData(elementIDs.generalSettingsForm);
-			// var servicesFormData = app.form.convertToData(elementIDs.outputSettingsForm);
-			app.dialog.alert(JSON.stringify(generalFormData));
+			var servicesFormData = app.form.convertToData(elementIDs.outputSettingsForm);
+			app.dialog.alert(JSON.stringify(servicesFormData));
 		});
 
-		$$('.fill-form-from-data').on('click', function () {
-
-			var formData = {
-				"ifttt-service-enabled": [(Settings.Services.IFTTT.serviceEnabled.Get() == true) ? "yes" : "no"],
-				"ifttt-api-key": Settings.Services.IFTTT.apiKey.Get()
-			}
-			app.form.fillFromData(elementIDs.outputSettingsForm, formData);
-		});
+		$$('.fill-form-from-data').on('click', PopulateSettings);
 
 		ipcRenderer.on(globals.systemEventNames.CLOSE_PREFERENCES, (event, args) => {
 			if (args.applySettings == true) {
 				ApplySettings();
 			}
 
-			setTimeout(ipcRenderer.send(globals.systemEventNames.CLOSE_PREFERENCES), 1000);
+			setTimeout(function () {
+				ipcRenderer.send(globals.systemEventNames.CLOSE_PREFERENCES, args);
+			}, 500);
 		});
 
 		ipcRenderer.on(globals.systemEventNames.APPLY_PREFERENCES, ApplySettings);
+
+
+		ipcRenderer.on(globals.systemEventNames.REQUEST_CLOSE_PREFERENCES, (event, args) => {
+			if (wereSettingsModifiedFromLastSaved == false) {
+				args.applySettings = false;
+				ipcRenderer.send(globals.systemEventNames.CLOSE_PREFERENCES, args);
+				return;
+			}
+
+
+			var dialog = app.dialog.create({
+				text: 'Would you like to save and apply these settings?',
+				destroyOnClose: true,
+				buttons: [
+					{
+						text: 'Save',
+						close: true,
+						bold: true,
+						keyCodes: [13],
+						onClick: (dialog, e) => {
+							args.applySettings = true;
+							ApplySettings();
+							ipcRenderer.send(globals.systemEventNames.CLOSE_PREFERENCES, args);
+						}
+					},
+					{
+						text: 'Don\'t Save',
+						close: true,
+						color: 'gray',
+						onClick: (dialog, e) => {
+							args.applySettings = false;
+							ipcRenderer.send(globals.systemEventNames.CLOSE_PREFERENCES, args);
+						}
+					},
+					{
+						text: 'Cancel',
+						close: true,
+						color: 'gray',
+						onClick: (dialog, e) => {
+							args.applySettings = false;
+						}
+					}
+				]
+			});
+			dialog.open();
+		});
 	</script>
 </body>
 

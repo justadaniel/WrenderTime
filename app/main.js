@@ -30,21 +30,34 @@ let mainWindow = null;
 let startWatchingOnBoot = false;
 let isWatching = false;
 let tray;
+const devToolsEnabled = false;
+const silentBoot = true;
 
 const RENDER_LIST = new RenderList();
 const isMac = process.platform === 'darwin';
 
+
+const labels = {
+    about: "About",
+    file: "File",
+    preferences: "Preferences",
+    checkForUpdates: "Check for Updates",
+    quit: "Quit",
+    githubRepo: "Github Repository",
+    submitIssue: "Submit Issue"
+}
+
 const contextMenu = Menu.buildFromTemplate([
     {
-        label: "Preferences...", type: "normal",
+        label: labels.preferences, type: "normal",
         click: async () => {
             OpenPreferences();
         }
     },
-    { label: "About", type: "normal", role: "about" },
+    { label: labels.about, type: "normal", role: "about" },
     { label: "Separator", type: "separator" },
     {
-        label: "Quit", type: "normal", click: (menuItem, browserWindow, event) => {
+        label: labels.quit, type: "normal", click: (menuItem, browserWindow, event) => {
 
             utilities.RequestQuit(function () {
                 utilities.StopWatch();
@@ -59,14 +72,14 @@ const appMenu = Menu.buildFromTemplate([
         submenu: [
             { role: 'about' },
             {
-                label: "Preferences...",
+                label: labels.preferences,
                 accelerator: "CommandOrControl+,",
                 click: async () => {
                     OpenPreferences();
                 }
             },
             {
-                label: "Check for Updates...",
+                label: labels.checkForUpdates,
                 click: async () => {
                     await shell.openExternal(globals.urls.github_issues)
                 }
@@ -82,19 +95,19 @@ const appMenu = Menu.buildFromTemplate([
         ]
     }] : []),
     {
-        label: 'File',
+        label: labels.file,
         submenu: [
             { role: 'about' },
             { type: 'separator' },
             {
-                label: "Preferences...",
+                label: labels.preferences,
                 accelerator: "CommandOrControl+,",
                 click: async () => {
                     OpenPreferences();
                 }
             },
             {
-                label: "Check for Updates...",
+                label: labels.checkForUpdates,
                 click: async () => {
                     await shell.openExternal(globals.urls.github_issues)
                 }
@@ -107,13 +120,13 @@ const appMenu = Menu.buildFromTemplate([
         role: 'help',
         submenu: [
             {
-                label: 'Github Repository',
+                label: labels.githubRepo,
                 click: async () => {
                     await shell.openExternal(globals.urls.github)
                 }
             },
             {
-                label: 'Submit Issue',
+                label: labels.submitIssue,
                 click: async () => {
                     await shell.openExternal(globals.urls.github_issues)
                 }
@@ -132,7 +145,7 @@ if (!isStandaloneWindow) {
         mb = menubar({
             dir: path.join(__dirname || path.resolve(dirname("")), "..", utilities.GetView()),
             tray: tray,
-            tooltip: `${app.name} - v${app.version}`,
+            tooltip: `${app.name} - v${app.getVersion()}`,
             preloadWindow: true,
             browserWindow: {
                 // alwaysOnTop: true,
@@ -174,7 +187,8 @@ else {
         // and load the index.html of the app.
         mainWindow.loadFile(utilities.GetView("index.html"));
         // Open the DevTools.
-        mainWindow.webContents.openDevTools();
+        if (devToolsEnabled)
+            mainWindow.webContents.openDevTools();
     }
 
     // This method will be called when Electron has finished
@@ -209,9 +223,25 @@ else {
 
 
 function OnAppReady() {
-    utilities.ShowNotification("App Running");
-    // console.log("App Ready");
+    if (silentBoot)
+        console.log("App Ready");
+    else
+        utilities.ShowNotification("App Running");
 }
+
+
+
+function SendEventToRenderer(event, arg0, arg1, arg2) {
+    if (mb != null) {
+        mb.window.webContents.send(event, arg0);
+    } else {
+        mainWindow.webContents.send(event, arg0);
+    }
+}
+
+
+
+
 
 let preferencesWindow;
 let preferencesWindowShouldClose = false;
@@ -228,7 +258,9 @@ function CreatePreferencesWindow() {
     });
     _preferencesWindow.removeMenu();
     _preferencesWindow.loadFile(utilities.GetView("preferences.html"));
-    // _preferencesWindow.webContents.openDevTools();
+
+    if (devToolsEnabled)
+        _preferencesWindow.webContents.openDevTools();
 
     _preferencesWindow.on('close', function (e) {
         if (!preferencesWindowShouldClose) {
@@ -258,29 +290,24 @@ function OpenPreferences() {
 }
 
 function ClosePreferences() {
-    var choice = utilities.ShowAlert('Would you like to apply these settings?',
-        {
-            type: 'question',
-            buttons: ['Yes', 'No', 'Cancel'],
-            title: 'Confirm'
-        });
 
-    if (choice !== 2) {
-        preferencesWindowShouldClose = true;
-        preferencesWindow.webContents.send(globals.systemEventNames.CLOSE_PREFERENCES, { applySettings: choice === 0 });
-    }
+    preferencesWindow.webContents.send(globals.systemEventNames.REQUEST_CLOSE_PREFERENCES, {});
+
+    // var choice = utilities.ShowAlert('Would you like to apply these settings?',
+    //     {
+    //         type: 'question',
+    //         buttons: ['Yes', 'No', 'Cancel'],
+    //         title: 'Confirm'
+    //     });
+
+    // if (choice !== 2) {
+    //     preferencesWindowShouldClose = true;
+    //     preferencesWindow.webContents.send(globals.systemEventNames.CLOSE_PREFERENCES, { applySettings: choice === 0 });
+    // }
 }
 
 
 
-
-function SendEventToRenderer(event, arg0, arg1, arg2) {
-    if (mb != null) {
-        mb.window.webContents.send(event, arg0);
-    } else {
-        mainWindow.webContents.send(event, arg0);
-    }
-}
 
 RENDER_LIST.on(globals.systemEventNames.WATCH_STATUS_CHANGED, function (isWatching) {
     // console.log(`Is Watching == ${isWatching}`);
@@ -343,7 +370,11 @@ ipcMain.on(globals.systemEventNames.OPEN_PREFERENCES, (e) => {
     OpenPreferences();
 });
 
-ipcMain.on(globals.systemEventNames.CLOSE_PREFERENCES, (e) => {
+ipcMain.on(globals.systemEventNames.CLOSE_PREFERENCES, (e, args) => {
+    if (args.applySettings)
+        console.log("Settings Applied");
+
+    preferencesWindowShouldClose = true;
     preferencesWindow.close();
     preferencesWindow = null;
 });
