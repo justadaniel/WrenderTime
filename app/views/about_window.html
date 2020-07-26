@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<!--
+Customize this policy to fit your own app's needs. For more guidance, see:
+https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+Some notes:
+* gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+* https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+* Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+* Enable inline JS: add 'unsafe-inline' to default-src
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2196f3">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-tap-highlight" content="no">
+<!-- <title>My App</title> -->
+<link rel="stylesheet" href="../framework7/css/framework7.bundle.min.css">
+<link rel="stylesheet" href="../css/icons.css">
+<link rel="stylesheet" href="../css/app.css">
+<script>
+const {
+    ipcRenderer,
+    remote
+} = require('electron');
+const path = require('path');
+</script>
+<style>
+:root {
+    --f7-page-content-extra-padding-top: -15px;
+}
+:root.device-macos {
+    --f7-page-content-extra-padding-top: 10px;
+}
+html,
+body,
+.panel,
+.panel-backdrop,
+.view,
+.page,
+.page-content {
+    /* background: transparent; */
+}
+#aboutWindow .block {
+    text-align: center;
+}
+#aboutWindow .appicon {
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin:10px auto;
+}
+#aboutWindow p {
+    font-size: 8pt;
+    opacity: 0.7;
+    margin:0px auto;
+}
+#aboutWindow .apptitle {
+    font-size: 14pt;
+}
+#aboutWindow .copyright {
+    margin:1em auto;
+    margin-bottom: 0px;
+}
+.navbar {
+    display:none;
+}
+:root.device-macos .navbar {
+    display:block;
+}
+</style>
+</head>
+<body class="color-theme-blue">
+<div id="app">
+    <div class="statusbar"></div>
+
+    <div id="aboutWindow" class="page" data-name="aboutWindow">
+        <div class="navbar">
+            <div class="navbar-inner">
+                <div class="left"></div>
+                <div class="title">About</div>
+                <div class="right"></div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="appicon"></div>
+            <div class="block">
+                <div class="apptitle"><script>document.write(remote.app.name);</script></div>
+                <p class="version">Version <script>document.write(remote.app.getVersion());</script></p>
+                <p class="copyright">Copyright &copy; 2018-<script>document.write(new Date().getFullYear())</script> BraveWorld Inc.<br/>All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+    <div class="popover popover-devtools">
+        <div class="popover-inner">
+            <div class="list">
+                <ul>
+                    <li><a class="list-button item-link toggle-devtools" href="#">Toggle DevTools</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../framework7/js/framework7.bundle.min.js"></script>
+<script src="../js/routes.js"></script>
+<script src="../js/dropzone.js"></script>
+<script src="../js/app.js"></script>
+<script>
+require(path.resolve(__dirname, "../components/Renderer.js"));
+
+let appIconSize = "72px";
+let appIconSizeFile = 128;
+let filename = appIconSizeFile + "x" + appIconSizeFile + ".png";
+let iconPathResolved = path.resolve(__dirname, "../images/appicon/" + filename);
+let iconPathJoined = path.join(__dirname, "../images/appicon/" + filename);
+
+let pathToIcon = iconPathResolved;
+
+console.log(pathToIcon);
+
+$$("#aboutWindow .appicon").css({
+    "width":appIconSize,
+    "height":appIconSize,
+    "background-size":"contain",
+    "background-image":"url(../images/appicon/96x96.png)"
+});
+
+$$(".button-window_close").on("click", () => {
+    remote.getCurrentWindow().close();
+});
+</script>
+</body>
+</html>

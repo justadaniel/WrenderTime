@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui, viewport-fit=cover">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="theme-color" content="#2196f3">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="msapplication-tap-highlight" content="no">
+	<link rel="stylesheet" href="../assets/framework7/css/framework7.bundle.min.css">
+	<link rel="stylesheet" href="../assets/css/icons.css">
+	<link rel="stylesheet" href="../assets/css/app.css">
+	<title>Loading...</title>
+	<script type="text/javascript">
+		const { remote, ipcRenderer } = require("electron");
+		const utils = require("../components/Utilities.js");
+		const globals = require("../components/Globals.js");
+		const RenderFile = require("../components/RenderFile.js");
+		const Settings = require("../components/Settings.js");
+		const appname = remote.app.getName();
+		const version = remote.app.getVersion();
+	</script>
+</head>
+
+<body>
+	<!-- App root element -->
+	<div id="app">
+		<!-- Your main view, should have "view-main" class -->
+		<!-- <div class="appbar">
+			<div class="appbar-inner">
+				<div class="left">
+					<a href="#" data-popover=".popover-devtools" class="button button-small display-flex popover-open">
+						<i class="f7-icons">bars</i>
+					</a>
+					<a class="button button-small display-flex margin-left-half">
+						<i class="f7-icons">gear_alt</i>
+					</a>
+					<a class="button button-small display-flex margin-left-half">
+						<i class="f7-icons">arrowshape_turn_up_left_2_fill</i>
+					</a>
+					<a class="button button-small display-flex margin-left-half">
+						<i class="f7-icons">arrowshape_turn_up_right_fill</i>
+					</a>
+				</div>
+				<div class="center">
+					<a class="button button-small display-flex margin-left-half">Keys</a>
+					<a class="button button-small display-flex margin-left-half">Categories</a>
+					<a class="button button-small display-flex margin-left-half">Languages</a>
+					<a class="button button-small display-flex margin-left-half">Import</a>
+					<a class="button button-small display-flex margin-left-half">Export</a>
+				</div>
+				<div class="right">
+					<div class="searchbar searchbar-inline">
+						<div class="searchbar-input-wrap">
+							<input type="text" placeholder="Search app">
+							<i class="searchbar-icon"></i>
+							<div class="input-clear-button"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div> -->
+		<div class="view view-main safe-areas">
+		</div>
+		<!-- Popup -->
+		<div class="popup" id="my-popup">
+			<div class="view">
+				<div class="page">
+					<div class="navbar">
+						<div class="navbar-inner">
+							<div class="title">Popup</div>
+							<div class="right">
+								<a href="#" class="link popup-close">Close</a>
+							</div>
+						</div>
+					</div>
+					<div class="page-content">
+						<div class="block block-strong dropzone"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="popover popover-menu">
+			<div class="popover-inner">
+				<div class="list">
+					<ul>
+						<li><a class="list-button item-link popover-close open-settings" href="#">Preferences</a></li>
+						<!-- <li><a class="list-button item-link popover-close toggle-devtools" href="#">Toggle DevTools</a></li> -->
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- <div class="page">
+		<input id="watchDirectory" type="text" placeholder="Watch Directory" value="D:\GCC\_Exported" />
+		<br />
+		<button id="toggleButton" onclick="toggleWatching()">Start</button>
+		<h4>Output</h4>
+		<p id="readout"></p>
+	</div> -->
+	<script src="../assets/framework7/js/framework7.bundle.min.js"></script>
+	<script src="../assets/js/routes.js"></script>
+	<!-- <script src="../assets/js/dropzone.js"></script> -->
+	<script src="../assets/js/app.js"></script>
+	<script type="text/javascript">
+
+		var mainView = app.views.create('.view-main', {
+			url: '/',
+			main: true,
+			masterDetailBreakpoint: 800,
+			// routes: localization_routes
+		});
+
+
+		function changePageTitle(title) {
+			document.title = title;
+		}
+
+
+
+		$$('.open-settings').on('click', OpenSettings);
+
+		const pageIDs = {
+			form: "#my-form",
+			workingDirectoryInputField: 'input[name="watchdir"]',
+			toggleButton: "#toggleButton",
+			readout: "#readout",
+			watchFileVirtualList: ".watch-file-list"
+		}
+
+		// Dummy items array
+		var cachedItems = [];
+		var watchFilesVirtualList;
+		var virtualListOptions = {
+			// List Element
+			el: pageIDs.watchFileVirtualList,
+			// items: items,// Pass array with items
+			items: [],
+			// Custom search function for searchbar
+			// searchAll: function (query, items) {
+			// 	var found = [];
+			// 	for (var i = 0; i < items.length; i++) {
+			// 		if (items[i].title.toLowerCase().indexOf(query.toLowerCase()) >= 0 || query.trim() === '') found.push(i);
+			// 	}
+			// 	return found; //return array with mathced indexes
+			// },
+			// List item Template7 template
+			setListHeight: true,
+			itemTemplate:
+				'<li class="swipeout" data-id="{{pretty_name}}" data-supporting-video="{{supportingVideoFile}}" data-supporting-audio="{{supportingAudioFile}}">' +
+				'<div class="swipeout-content">' +
+				'<a href="#" class="item-link item-content">' +
+				'<div class="item-inner">' +
+				'<div class="item-title-row">' +
+				'<div class="item-title">{{pretty_name}}</div>' +
+				'<div class="item-after">{{file_extension}}</div>' +
+				'</div>' +
+				'<div class="item-subtitle">{{size_formatted}}</div>' +
+				'<div class="item-text">AME ID: {{ameID}}</div>' +
+				'</div>' +
+				'</a>' +
+				'</div>' +
+				'<div class="swipeout-actions-right">' +
+				'<a href="#" class="swipeout-delete">Remove</a>' +
+				// '<a href="#" data-confirm="Are you sure you want to delete this item?" class="swipeout-delete swipeout-overswipe">Remove</a>' +
+				'</div>' +
+				'</li>',
+			// Item height
+			height: function (item) {
+				const twoLine = app.theme === 'ios' ? 106 : (app.theme === 'md' ? 113 : 78);
+				const oneLine = app.theme === 'ios' ? 85 : (app.theme === 'md' ? 93 : 62);
+
+				return oneLine;
+			},
+		};
+
+
+		function CreateWatchList() {
+			watchFilesVirtualList = app.virtualList.create(virtualListOptions);
+
+			$$(pageIDs.watchFileVirtualList).on('click', 'li', function () {
+				let returnVal = {
+					id: $$(this).attr('data-id'),
+					video: $$(this).attr('data-supporting-video'),
+					audio: $$(this).attr('data-supporting-audio')
+				}
+				console.log(returnVal);
+			});
+			$$(pageIDs.watchFileVirtualList).on('swipeout:delete', 'li', function () {
+				let fileID = $$(this).attr('data-id');
+				ipcRenderer.send(globals.systemEventNames.WATCH_FILE_MANUALLY_REMOVED, fileID);
+			});
+
+			// console.log("Virtual List Created");
+		}
+
+		function getWorkingDirectoryField() {
+			return $$(pageIDs.workingDirectoryInputField);
+		}
+
+		function toggleWatching() {
+			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, Settings.General.watchFolderLocation.Get());
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			ipcRenderer.send(globals.systemEventNames.DOM_LOADED, "Im ready");
+		});
+
+		const mainPageName = "main";
+		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
+			changePageTitle(`${appname} - v${version}`);
+			CreateWatchList();
+
+			// if (Settings.General.startWatchingImmediately.Get())
+			// 	toggleWatching();
+		});
+
+		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {
+			$$(pageIDs.toggleButton).text((isWatching) ? "Stop" : "Start");
+			$$(pageIDs.workingDirectoryInputField).disabled = isWatching;
+
+			// console.log(`IsWatching: ${isWatching}`);
+		});
+
+		ipcRenderer.on(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, (event, e, p) => {
+			let debugText = `${e}: \"${p}\"`;
+			let debugTextHTML = `<b>${e}:</b> <i>\"${p}\"</i>`;
+			// console.log(debugText);
+			$$(pageIDs.readout).html(debugTextHTML);
+		});
+
+		ipcRenderer.on(globals.systemEventNames.WATCH_LIST_UPDATED, (event, updated_watch_list) => {
+			if (cachedItems != updated_watch_list) {
+				cachedItems = updated_watch_list;
+				// console.log("Updated Cached Items");
+				// console.log(updated_watch_list);
+				watchFilesVirtualList.replaceAllItems(updated_watch_list);
+				watchFilesVirtualList.update();
+			}
+		});
+
+
+		function OpenSettings() {
+			ipcRenderer.send(globals.systemEventNames.OPEN_PREFERENCES, {});
+		}
+	</script>
+</body>
+
+</html>
