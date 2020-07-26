@@ -21,9 +21,11 @@ var globals = {
         CLOSE_PREFERENCES: "close-preferences",
         CHECK_FOR_UPDATES: "check-for-updates",
         SELECT_DIRECTORY: "select-directory",
-        DIRECTORY_SELECTED: "directory-selected"
+        DIRECTORY_SELECTED: "directory-selected",
+        START_ON_BOOT_CHANGED: "start-on-boot-changed"
     },
     supportedFileTypes: {
+        mainVideo: ["mp4", "mov"],
         video: ["m4v", "mov", "mp4", "avi", "flv", "mkv"],
         audio: ["aac", "mp3", "wav"]
     },

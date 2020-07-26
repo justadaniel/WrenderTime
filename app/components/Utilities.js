@@ -11,8 +11,10 @@ const {
     Notification,
     EventEmitter
 } = require("electron");
+const path = require('path');
 const chokidar = require("chokidar");
 const settings = require("electron-settings");
+const isDev = require('electron-is-dev');
 var inherits = require("util").inherits;
 
 let watcher = null;
@@ -22,7 +24,7 @@ var directories = {
     VIEWS: root + "/views/"
 };
 
-var utils = {
+var utilities = {
     WatchEvents: {
         ADD: "add",
         ADD_DIR: "addDir",
@@ -34,6 +36,31 @@ var utils = {
         RAW: "raw"
     },
     Settings: settings,
+    IsDev: function () {
+        return isDev;
+    },
+    GetAppPath: function () {
+        // let fileExtension = (process.platform == 'darwin') ? 'app' : 'exe';
+        // return app.getPath(fileExtension);
+        return process.execPath;
+    },
+    SetStartAppOnBoot: function (startOnBoot) {
+        if (!utilities.IsDev()) {
+            const exeName = path.basename(process.execPath);
+            app.setLoginItemSettings({
+                openAtLogin: startOnBoot,
+                path: process.execPath,
+                args: [
+                    '--processStart', `${exeName}`,
+                    '--process-start-args', "--hidden"
+                ]
+            });
+
+            console.log(`Start on Boot set to ${startOnBoot}`);
+        } else {
+            console.log(`Can't set start on boot due to this being a dev environment`);
+        }
+    },
     BytesToHumanFileSize: function (bytes, si = false, dp = 1) {
         const thresh = si ? 1000 : 1024;
 
@@ -74,7 +101,7 @@ var utils = {
     RequestQuit: function (confirmCallback = null) {
         console.log("requested quit");
 
-        let response = utils.ShowAlert("Do you really want to quit?", {
+        let response = utilities.ShowAlert("Do you really want to quit?", {
             title: "Quitting...",
             detail: "Doing so will kill all watch folders.",
             buttons: ["Quit", "Cancel"],
@@ -83,7 +110,7 @@ var utils = {
         });
 
         if (response == 0) {
-            utils.Quit(confirmCallback);
+            utilities.Quit(confirmCallback);
         }
     },
     Quit: function (callback = function () { }) {
@@ -135,7 +162,7 @@ var utils = {
 }
 
 // CONSTANTS
-Object.defineProperties(utils.WatchEvents, {
+Object.defineProperties(utilities.WatchEvents, {
     ZERO: {
         value: "MEH",
         writable: false,
@@ -143,4 +170,4 @@ Object.defineProperties(utils.WatchEvents, {
     }
 });
 
-module.exports = utils;
+module.exports = utilities;

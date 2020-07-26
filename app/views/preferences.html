@@ -18,11 +18,12 @@
 	<title>Preferences</title>
 	<script type="text/javascript">
 		const { remote, ipcRenderer } = require("electron");
-		const utils = require("../components/Utilities.js");
+		const utilities = require("../components/Utilities.js");
 		const globals = require("../components/Globals.js");
 		const Settings = require("../components/Settings.js");
 		const RenderFile = require("../components/RenderFile.js");
 		const IFTTT = require("../components/services/IFTTT.js");
+		const path = require('path');
 		const appname = remote.app.getName();
 		const version = remote.app.getVersion();
 	</script>
@@ -87,18 +88,17 @@
 								</div>
 								<div class="list simple-list">
 									<ul>
-										<li class="inop-tooltip disabled">
+										<li>
 											<span>Start with System</span>
 											<label class="toggle toggle-init" id="start-with-system-toggle">
 												<input type="checkbox" name="start-with-system-toggle" />
 												<span class="toggle-icon"></span>
 											</label>
 										</li>
-										<li class="inop-tooltip disabled">
+										<li>
 											<span>Start Watching on App Load</span>
 											<label class="toggle toggle-init" id="start-watching-on-load">
-												<input type="checkbox" class="inop-tooltip"
-													name="start-watching-on-load" />
+												<input type="checkbox" name="start-watching-on-load" />
 												<span class="toggle-icon"></span>
 											</label>
 										</li>
@@ -204,6 +204,16 @@
 								<p>Save File Location:
 									<script type="text/javascript">document.write(Settings.GetSettingsFile())</script>
 								</p>
+								<p>Exec Path:
+									<script type="text/javascript">document.write(process.execPath)</script>
+								</p>
+								<p>Path Basename:
+									<script
+										type="text/javascript">document.write(path.basename(process.execPath))</script>
+								</p>
+								<p>Path:
+									<script type="text/javascript">document.write(remote.app.getPath('exe'))</script>
+								</p>
 							</div>
 						</div>
 					</div>
@@ -278,7 +288,10 @@
 			if (Settings.General.watchFolderLocation.Set(generalFormData["watch-folder-path"]))
 				mustRestart = true;
 
-			Settings.General.runOnSystemStart.Set(generalFormData["start-with-system-toggle"] == "on");
+			let startOnBoot = generalFormData["start-with-system-toggle"] == "on";
+			Settings.General.runOnSystemStart.Set(startOnBoot);
+			ipcRenderer.send(globals.systemEventNames.START_ON_BOOT_CHANGED, { startOnBoot: startOnBoot });
+
 			Settings.General.startWatchingImmediately.Set(generalFormData["start-watching-on-load"] == "on");
 			Settings.General.showNotificationOnAppReady.Set(generalFormData["notification-on-app-ready"] == "on");
 
@@ -286,8 +299,8 @@
 			Settings.Services.IFTTT.apiKey.Set(servicesFormData["ifttt-api-key"]);
 
 
+			app.dialog.close();
 			setTimeout(function () {
-				app.dialog.close();
 
 				const logText = `Settings Applied (Must Restart: ${mustRestart})`;
 				console.log(logText);
@@ -336,7 +349,7 @@
 		$$('.convert-form-to-data').on('click', function () {
 			var generalFormData = app.form.convertToData(elementIDs.generalSettingsForm);
 			var servicesFormData = app.form.convertToData(elementIDs.outputSettingsForm);
-			app.dialog.alert(JSON.stringify(servicesFormData));
+			app.dialog.alert(JSON.stringify(generalFormData));
 		});
 
 		$$('.fill-form-from-data').on('click', PopulateSettings);

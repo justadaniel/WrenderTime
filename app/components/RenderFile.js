@@ -14,8 +14,7 @@ var path = require("path");
 // 	displayName: "Build Action"
 // };
 
-const AudioFileExtensions = ["aac", "mp3", "wav"];
-const VideoFileExtensions = ["m4v", "mov", "mp4", "avi", "flv", "mkv"];
+
 
 
 const FILE_TYPE = {
@@ -39,6 +38,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 		super();
 		this.file = file;
 		this.RefreshSync();
+		this.ResetNotify();
 	}
 
 	RefreshSync() {
@@ -136,21 +136,22 @@ var RenderFile = class RenderFile extends EventEmitter {
 		return RenderFile.GetEncoderID(path) != null;
 	}
 
-	ResetNotify() {
-		this.wasNotifiedOfComplete = false;
-	}
-
 	SetMainFile(path) {
-		if (globals.supportedFileTypes.video.includes(RenderFile.GetFileExtension(path)) || globals.supportedFileTypes.audio.includes(RenderFile.GetFileExtension(path))) {
+		if (globals.supportedFileTypes.mainVideo.includes(RenderFile.GetFileExtension(path))) {
 			this.file = path;
-			this.ResetNotify();
 			this.Refresh();
+			this.ResetNotify();
 			console.log(`Changed Main File - ${path}`);
 		}
 	}
 
+	ResetNotify() {
+		this.wasNotifiedOfComplete = false;
+	}
+
 	Notify() {
 		this.wasNotifiedOfComplete = true;
+		console.log("Notifying of completion");
 		this.emit(globals.systemEventNames.FILE_RENDER_FINISHED, this);
 	}
 
@@ -168,8 +169,10 @@ var RenderFile = class RenderFile extends EventEmitter {
 	 */
 	ShouldNotifyComplete() {
 		this.Refresh();
-		// console.log(`Size == ${this.size}`);
-		return this.size > 0 && this.wasNotifiedOfComplete == false;
+		console.log(`Was Notified ${this.wasNotifiedOfComplete}`);
+		let shouldNotify = this.size > 0 && this.wasNotifiedOfComplete == false && globals.supportedFileTypes.mainVideo.includes(this.file_extension);
+		console.log(`Should Notify ${shouldNotify}`);
+		return shouldNotify;
 	}
 
 	/**

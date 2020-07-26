@@ -30,8 +30,7 @@ let mainWindow = null;
 let startWatchingOnBoot = false;
 let isWatching = false;
 let tray;
-const devToolsEnabled = false;
-const silentBoot = true;
+const devToolsEnabled = utilities.IsDev();
 
 const RENDER_LIST = new RenderList();
 const isMac = process.platform === 'darwin';
@@ -226,7 +225,12 @@ function OnAppReady() {
     if (Settings.General.showNotificationOnAppReady.Get() == true)
         utilities.ShowNotification("App Running");
     else
-        console.log("App Ready");
+        console.log("App Running");
+
+    utilities.SetStartAppOnBoot(Settings.General.runOnSystemStart.Get());
+
+    if (Settings.General.startWatchingImmediately.Get())
+        ToggleWatching(Settings.General.watchFolderLocation.Get());
 }
 
 
@@ -353,11 +357,16 @@ ipcMain.on(globals.systemEventNames.DOM_LOADED, (event) => {
     UpdateWatchList();
 });
 
-ipcMain.on(globals.systemEventNames.TOGGLE_WATCH, (event, dir) => {
+function ToggleWatching(dir) {
     RENDER_LIST.ToggleWatching(dir, function () {
         UpdateWatchList();
     });
+    utilities.ShowNotification((RENDER_LIST.isWatching) ? "Started Watching" : "Stopped Watching");
     // UpdateWatchListStatus(event);
+}
+
+ipcMain.on(globals.systemEventNames.TOGGLE_WATCH, (event, dir) => {
+    ToggleWatching(dir);
 });
 
 ipcMain.on(globals.systemEventNames.REQUEST_QUIT, (event) => {
@@ -366,8 +375,12 @@ ipcMain.on(globals.systemEventNames.REQUEST_QUIT, (event) => {
     });
 });
 
-ipcMain.on(globals.systemEventNames.OPEN_PREFERENCES, (e) => {
+ipcMain.on(globals.systemEventNames.OPEN_PREFERENCES, (e, args) => {
     OpenPreferences();
+});
+
+ipcMain.on(globals.systemEventNames.START_ON_BOOT_CHANGED, (e, args) => {
+    utilities.SetStartAppOnBoot(args.startOnBoot);
 });
 
 ipcMain.on(globals.systemEventNames.CLOSE_PREFERENCES, (e, args) => {

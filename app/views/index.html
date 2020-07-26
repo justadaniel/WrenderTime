@@ -205,7 +205,6 @@
 		}
 
 		function toggleWatching() {
-			var formData = app.form.convertToData(pageIDs.form);
 			ipcRenderer.send(globals.systemEventNames.TOGGLE_WATCH, Settings.General.watchFolderLocation.Get());
 		}
 
@@ -217,7 +216,9 @@
 		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
 			changePageTitle(`${appname} - v${version}`);
 			CreateWatchList();
-			// toggleWatching();
+
+			// if (Settings.General.startWatchingImmediately.Get())
+			// 	toggleWatching();
 		});
 
 		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {

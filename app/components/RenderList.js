@@ -81,8 +81,10 @@ var RenderList = class RenderList extends EventEmitter {
 			let _newItem = new RenderFile(path);
 
 
-			if (_newItem.HasEncoderID()) {
+			if (RenderFile.HasEncoderID(path)) {
 				_newItem.AddSupportFile(path);
+			} else {
+				_newItem.SetMainFile(path);
 			}
 
 			this.items.unshift(_newItem);
@@ -96,10 +98,11 @@ var RenderList = class RenderList extends EventEmitter {
 				_currentFile.SetMainFile(path);
 			}
 		}
+		console.log(`HasEncoderID: ${RenderFile.HasEncoderID(path)}`);
 	}
 
 	Change(path) {
-		console.log(`File: ${path}`);
+		// console.log(`File: ${path}`);
 
 		if (this.Exists(path)) {
 			console.log(`Changed \"${path}\"`);
@@ -185,6 +188,8 @@ var RenderList = class RenderList extends EventEmitter {
 				console.log(`\"${watchEvent}\" not added to switch`);
 				break;
 		}
+
+		// console.log(`File ${watchEvent}: ${path}`);
 
 		this.emit(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, watchEvent, path);
 		this.emit(globals.systemEventNames.WATCH_LIST_UPDATED, this.items);
