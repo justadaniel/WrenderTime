@@ -25,8 +25,8 @@
     ],
     "dependencies": {
         "auto-launch": "^5.0.5",
-        "chokidar": "^3.4.0",
-        "electron-context-menu": "^2.0.1",
+        "chokidar": "^3.4.1",
+        "electron-context-menu": "^2.2.0",
         "electron-is-dev": "^1.2.0",
         "electron-log": "^4.2.2",
         "electron-settings": "^4.0.2",
@@ -34,11 +34,11 @@
         "electron-sudo": "^4.0.12",
         "electron-updater": "^4.3.1",
         "electron-util": "^0.14.2",
-        "got": "^11.4.0",
+        "got": "^11.5.1",
         "menubar": "^9.0.1"
     },
     "devDependencies": {
-        "electron": "^9.0.5",
+        "electron": "^9.1.1",
         "electron-builder": "^22.7.0"
     },
     "build": {
@@ -57,8 +57,7 @@
             "owner": "justadaniel",
             "host": "github.com",
             "protocol": "https",
-            "releaseType": "draft",
-            "private": false
+            "releaseType": "draft"
         },
         "dmg": {
             "contents": [
