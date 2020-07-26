@@ -10,7 +10,8 @@ const chokidar = require("chokidar");
 const RenderFile = require("./RenderFile.js");
 var fs = require("fs"); //Load the filesystem module
 var path = require("path");
-const { Console } = require('console');
+const log = require('electron-log');
+// const { Console } = require('console');
 
 
 const FILE_TYPE = {

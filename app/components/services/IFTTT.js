@@ -1,4 +1,5 @@
 const https = require('https');
+const log = require('electron-log');
 
 const IFTTT = {
 	SendRequest(event, apiKey, body, method = 'POST') {

@@ -15,6 +15,7 @@ const path = require('path');
 const chokidar = require("chokidar");
 const settings = require("electron-settings");
 const isDev = require('electron-is-dev');
+const log = require('electron-log');
 var inherits = require("util").inherits;
 
 let watcher = null;

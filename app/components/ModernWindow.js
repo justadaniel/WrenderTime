@@ -14,6 +14,7 @@ const {
 } = require("electron");
 const { SSL_OP_NO_QUERY_MTU } = require("constants");
 var inherits = require('util').inherits;
+const log = require('electron-log');
 
 let defaults = {
 	displayName: "Build Action"

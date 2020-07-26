@@ -1,5 +1,6 @@
 const https = require('https');
 const fs = require('fs');
+const log = require('electron-log');
 
 
 // function to encode file data to base64 encoded string

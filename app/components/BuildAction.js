@@ -10,6 +10,7 @@ var fs = require("fs"); //Load the filesystem module
 var path = require("path");
 const electron = require("electron");
 var inherits = require('util').inherits;
+const log = require('electron-log');
 
 let defaults = {
     displayName: "Build Action"

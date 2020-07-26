@@ -8,6 +8,7 @@ const globals = require("./Globals.js");
 const utilities = require("./Utilities.js");
 var fs = require("fs"); //Load the filesystem module
 var path = require("path");
+const log = require('electron-log');
 
 
 // let defaults = {

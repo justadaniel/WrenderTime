@@ -7,6 +7,7 @@ const {
     webContents,
     ipcMain,
     dialog,
+    protocol,
     EventEmitter,
     shell
 } = require("electron");
@@ -14,8 +15,10 @@ const path = require("path");
 // const rq = require("./components/electron-require.js");
 const globals = require("./components/Globals.js");
 const utilities = require("./components/Utilities.js");
+const { autoUpdater } = require("electron-updater");
 const ModernWindow = require("./components/ModernWindow.js");
 const chokidar = require("chokidar");
+const log = require('electron-log');
 const { menubar } = require("menubar");
 const RenderList = require("./components/RenderList.js");
 const RenderFile = require("./components/RenderFile.js");
@@ -31,6 +34,9 @@ let startWatchingOnBoot = false;
 let isWatching = false;
 let tray;
 const devToolsEnabled = utilities.IsDev();
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
 
 const RENDER_LIST = new RenderList();
 const isMac = process.platform === 'darwin';
@@ -231,7 +237,37 @@ function OnAppReady() {
 
     if (Settings.General.startWatchingImmediately.Get())
         ToggleWatching(Settings.General.watchFolderLocation.Get());
+
+    // autoUpdater.setFeedURL("https://github.com/justadaniel/WrenderTime/tree/development/releases/");
+    autoUpdater.checkForUpdatesAndNotify();
 }
+
+function sendStatusToWindow(text) {
+    log.info(text);
+    // win.webContents.send('message', text);
+}
+
+// autoUpdater.on('checking-for-update', () => {
+//     sendStatusToWindow('Checking for update...');
+// })
+// autoUpdater.on('update-available', (info) => {
+//     sendStatusToWindow('Update available.');
+// })
+// autoUpdater.on('update-not-available', (info) => {
+//     sendStatusToWindow('Update not available.');
+// })
+// autoUpdater.on('error', (err) => {
+//     sendStatusToWindow('Error in auto-updater. ' + err);
+// })
+// autoUpdater.on('download-progress', (progressObj) => {
+//     let log_message = "Download speed: " + progressObj.bytesPerSecond;
+//     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+//     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+//     sendStatusToWindow(log_message);
+// })
+// autoUpdater.on('update-downloaded', (info) => {
+//     sendStatusToWindow('Update downloaded');
+// });
 
 
 
