@@ -17,7 +17,7 @@
         "publish:win": "electron-builder --win -p always",
         "publish:mac": "electron-builder --mac -p always"
     },
-    "repository": "https://github.com/justadaniel/WrenderTime/",
+    "repository": "github:justadaniel/WrenderTime",
     "keywords": [
         "Electron",
         "Adobe",
