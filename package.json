@@ -1,7 +1,7 @@
 {
     "name": "WrenderTime",
     "productName": "Wrender Time",
-    "version": "0.0.1",
+    "version": "0.0.1b",
     "description": "A small utility app for video editors.",
     "author": "Daniel Christmas",
     "copyright": "Copyright © 2020, Daniel Christmas, All Rights Reserved.",
@@ -10,16 +10,17 @@
         "start": "electron .",
         "pack": "electron-builder --dir",
         "postinstall": "electron-builder install-app-deps",
-        "build": "electron-builder --win",
+        "build": "electron-builder -mwl",
         "build:win": "electron-builder --win",
         "build:mac": "electron-builder --mac",
         "publish": "electron-builder -mwl -p always",
         "publish:win": "electron-builder --win -p always",
-        "publish:mac": "electron-builder --mac -p always"
+        "publish:mac": "electron-builder --mac -p always",
+        "release": "build"
     },
     "repository": {
-        "type":"git",
-        "url":"https://github.com/justadaniel/WrenderTime.git"
+        "type": "git",
+        "url": "https://github.com/justadaniel/WrenderTime.git"
     },
     "keywords": [
         "Electron",
@@ -35,32 +36,30 @@
         "electron-settings": "^4.0.2",
         "electron-store": "^5.2.0",
         "electron-sudo": "^4.0.12",
-        "electron-updater": "^4.3.1",
+        "electron-updater": "^4.3.4",
         "electron-util": "^0.14.2",
         "got": "^11.5.1",
         "menubar": "^9.0.1"
     },
     "devDependencies": {
         "electron": "^9.1.1",
-        "electron-builder": "^22.7.0"
+        "electron-builder": "^22.8.0"
     },
     "build": {
+        "appId": "com.justadaniel.wrendertime",
         "files": [
             "app/**/*",
             "node_modules/**/*",
             "package.json"
         ],
         "directories": {
-            "buildResources": "resources"
+            "buildResources": "build"
         },
-        "appId": "com.justadaniel.wrendertime",
         "publish": {
             "provider": "github",
-            "repo": "WrenderTime",
             "owner": "justadaniel",
-            "host": "github.com",
-            "protocol": "https",
-            "releaseType": "draft"
+            "vPrefixedTagName": "true",
+            "private": false
         },
         "dmg": {
             "contents": [
@@ -90,8 +89,7 @@
         "win": {
             "icon": "build/win/icon.ico",
             "target": [
-                "nsis",
-                "portable"
+                "nsis"
             ]
         }
     }
