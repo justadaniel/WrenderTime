@@ -16,10 +16,11 @@ To setup IFTTT, you need to create a webhook action on their site, set the event
 
 #### To-Do
 ###### Features
+- [X] Automatic Build using Github Actions
 - [ ] Feature-Parody on MacOS
 - [ ] Auto-Updater
 - [ ] Better App Icon
-- [ ] Video Preview Support
+- [ ] Video Preview Support (Maybe)
 
 ###### Encoder Support
 - [X] H.264
