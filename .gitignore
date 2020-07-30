@@ -105,3 +105,5 @@ dist
 
 # Custom Files
 gh_token.txt
+
+.DS_Store
