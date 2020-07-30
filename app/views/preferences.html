@@ -26,6 +26,7 @@
 		const path = require('path');
 		const appname = remote.app.getName();
 		const version = remote.app.getVersion();
+		const exampleWorkingDirectory = (remote.process.platform === 'darwin') ? "/Users/johndoe/Desktop" : "C:\\sad\\sadsa";
 	</script>
 </head>
 
@@ -256,6 +257,8 @@
 		document.addEventListener('DOMContentLoaded', PopulateSettings);
 
 		function PopulateSettings() {
+			$$(elementIDs.watchFolderPath).attr("placeholder", exampleWorkingDirectory);
+
 			var generalFormData = {
 				"watch-folder-path": Settings.General.watchFolderLocation.Get(),
 				"start-with-system-toggle": [(Settings.General.runOnSystemStart.Get() == true) ? "on" : "off"],

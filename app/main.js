@@ -27,17 +27,19 @@ const IFTTT = require("./components/services/IFTTT.js");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
 
-const isStandaloneWindow = false;
 let mb = null;
 let mainWindow = null;
 let startWatchingOnBoot = false;
 let isWatching = false;
 let tray;
-// const devToolsEnabled = utilities.IsDev();
-const devToolsEnabled = false;
+const devToolsEnabled = utilities.IsDev();
+// const devToolsEnabled = false;
+const isStandaloneWindow = false;
 
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
+const gotTheLock = app.requestSingleInstanceLock();
+
+// autoUpdater.logger = log;
+// autoUpdater.logger.transports.file.level = 'info';
 
 const RENDER_LIST = new RenderList();
 const isMac = process.platform === 'darwin';
@@ -141,6 +143,74 @@ const appMenu = Menu.buildFromTemplate([
     }
 ]);
 
+if (!gotTheLock) {
+    log.info("Didn't get the lock");
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // Someone tried to run a second instance, we should focus our window.
+        // if (mainWindow != null) {
+        //     if (mainWindow.isMinimized()) mainWindow.restore()
+        //     mainWindow.focus();
+        // }
+        log.info("Second Instance");
+    });
+}
+
+
+// app.whenReady().then(() => {
+//     CreateMainWindow();
+// });
+
+
+
+
+function OnAppReady() {
+    log.info("Ready");
+
+    if (Settings.General.showNotificationOnAppReady.Get() == true)
+        utilities.ShowNotification("App Running");
+    else
+        console.log("App Running");
+
+    utilities.SetStartAppOnBoot(Settings.General.runOnSystemStart.Get());
+
+    if (Settings.General.startWatchingImmediately.Get())
+        ToggleWatching(Settings.General.watchFolderLocation.Get());
+
+
+
+    // autoUpdater.setFeedURL("https://github.com/justadaniel/WrenderTime/tree/development/releases/");
+    // autoUpdater.checkForUpdatesAndNotify();
+}
+
+function sendStatusToWindow(text) {
+    log.info(text);
+    // win.webContents.send('message', text);
+}
+
+// autoUpdater.on('checking-for-update', () => {
+//     sendStatusToWindow('Checking for update...');
+// })
+// autoUpdater.on('update-available', (info) => {
+//     sendStatusToWindow('Update available.');
+// })
+// autoUpdater.on('update-not-available', (info) => {
+//     sendStatusToWindow('Update not available.');
+// })
+// autoUpdater.on('error', (err) => {
+//     sendStatusToWindow('Error in auto-updater. ' + err);
+// })
+// autoUpdater.on('download-progress', (progressObj) => {
+//     let log_message = "Download speed: " + progressObj.bytesPerSecond;
+//     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+//     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+//     sendStatusToWindow(log_message);
+// })
+// autoUpdater.on('update-downloaded', (info) => {
+//     sendStatusToWindow('Update downloaded');
+// });
+
 if (!isStandaloneWindow) {
     app.on("ready", function () {
 
@@ -207,15 +277,16 @@ else {
     // Some APIs can only be used after this event occurs.
     app.whenReady().then(() => {
         createWindow();
+    });
 
-        app.on("activate", function () {
-            // On macOS it"s common to re-create a window in the app when the
-            // dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) {
-                createWindow();
-                OnAppReady();
-            }
-        });
+
+    app.on("activate", function () {
+        // On macOS it"s common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (BrowserWindow.getAllWindows().length === 0) {
+            CreateMainWindow();
+            OnAppReady();
+        }
     });
 
     // Quit when all windows are closed, except on macOS. There, it"s common
@@ -231,51 +302,13 @@ else {
     // code. You can also put them in separate files and require them here.
 }
 
-
-
-function OnAppReady() {
-    if (Settings.General.showNotificationOnAppReady.Get() == true)
-        utilities.ShowNotification("App Running");
-    else
-        console.log("App Running");
-
-    utilities.SetStartAppOnBoot(Settings.General.runOnSystemStart.Get());
-
-    if (Settings.General.startWatchingImmediately.Get())
-        ToggleWatching(Settings.General.watchFolderLocation.Get());
-
-    // autoUpdater.setFeedURL("https://github.com/justadaniel/WrenderTime/tree/development/releases/");
-    autoUpdater.checkForUpdatesAndNotify();
+function RestoreMainWindow() {
+    if (mb != null) {
+        mb.window.webContents.send(event, arg0);
+    } else {
+        mainWindow.webContents.send(event, arg0);
+    }
 }
-
-function sendStatusToWindow(text) {
-    log.info(text);
-    // win.webContents.send('message', text);
-}
-
-// autoUpdater.on('checking-for-update', () => {
-//     sendStatusToWindow('Checking for update...');
-// })
-// autoUpdater.on('update-available', (info) => {
-//     sendStatusToWindow('Update available.');
-// })
-// autoUpdater.on('update-not-available', (info) => {
-//     sendStatusToWindow('Update not available.');
-// })
-// autoUpdater.on('error', (err) => {
-//     sendStatusToWindow('Error in auto-updater. ' + err);
-// })
-// autoUpdater.on('download-progress', (progressObj) => {
-//     let log_message = "Download speed: " + progressObj.bytesPerSecond;
-//     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-//     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-//     sendStatusToWindow(log_message);
-// })
-// autoUpdater.on('update-downloaded', (info) => {
-//     sendStatusToWindow('Update downloaded');
-// });
-
-
 
 function SendEventToRenderer(event, arg0, arg1, arg2) {
     if (mb != null) {
