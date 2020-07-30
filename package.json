@@ -10,10 +10,10 @@
         "start": "electron .",
         "pack": "electron-builder --dir",
         "postinstall": "electron-builder install-app-deps",
-        "build": "electron-builder -mwl",
+        "build": "electron-builder -mw",
         "build:win": "electron-builder --win",
         "build:mac": "electron-builder --mac",
-        "publish": "electron-builder -mwl -p always",
+        "publish": "electron-builder -mw -p always",
         "publish:win": "electron-builder --win -p always",
         "publish:mac": "electron-builder --mac -p always",
         "release": "build"
