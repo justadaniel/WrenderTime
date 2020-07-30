@@ -121,8 +121,8 @@ var utilities = {
             callback();
 
         setTimeout(() => {
-            if (process.platform !== "darwin")
-                app.quit();
+            // if (process.platform !== "darwin")
+            app.quit();
         }, 1000);
     },
     ShowAlert: function (message, options = {}) {

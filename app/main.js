@@ -13,7 +13,7 @@ const {
 } = require("electron");
 const path = require("path");
 // const rq = require("./components/electron-require.js");
-const globals = require("./components/Globals.js");
+const globals = require("./components/globals.js");
 const utilities = require("./components/Utilities.js");
 const { autoUpdater } = require("electron-updater");
 const ModernWindow = require("./components/ModernWindow.js");
@@ -33,7 +33,8 @@ let mainWindow = null;
 let startWatchingOnBoot = false;
 let isWatching = false;
 let tray;
-const devToolsEnabled = utilities.IsDev();
+// const devToolsEnabled = utilities.IsDev();
+const devToolsEnabled = false;
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
@@ -145,8 +146,6 @@ if (!isStandaloneWindow) {
 
         tray = new Tray(iconPath);
 
-        tray.setContextMenu(contextMenu);
-
         mb = menubar({
             dir: path.join(__dirname || path.resolve(dirname("")), "..", utilities.GetView()),
             tray: tray,
@@ -166,6 +165,13 @@ if (!isStandaloneWindow) {
 
         mb.on("ready", () => {
             OnAppReady();
+        });
+
+        // tray.on("click", () => {
+        //     console.log("Clicked");
+        // });
+        tray.on("right-click", () => {
+            tray.popUpContextMenu(contextMenu);
         });
 
         // mb.on("after-create-window", () => {

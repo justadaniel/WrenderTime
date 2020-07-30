@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 const EventEmitter = require('events');
 
-const globals = require("./Globals.js");
+const globals = require("./globals.js");
 const utilities = require("./Utilities.js");
 const settings = require("electron-settings");
 var fs = require("fs"); //Load the filesystem module
