@@ -1,5 +1,8 @@
 # WrenderTime ![Build/release](https://github.com/justadaniel/WrenderTime/workflows/Build/release/badge.svg)
-<img src="https://raw.githubusercontent.com/justadaniel/WrenderTime/release/build/icon.png" width="128" height="128">
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/justadaniel/WrenderTime/release/build/icon.png" width="200" height="200">
+</p>
 
 <font color="red">**Warning:** It's is extremely buggy and there is still a lot of work to do!</font>
 
