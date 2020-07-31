@@ -19,7 +19,8 @@
 	<script type="text/javascript">
 		const { remote, ipcRenderer } = require("electron");
 		const utilities = require("../components/Utilities.js");
-		const globals = require("../components/Globals.js");
+		const globals = require("../components/globals.js");
+		const log = require('electron-log');
 		const Settings = require("../components/Settings.js");
 		const RenderFile = require("../components/RenderFile.js");
 		const IFTTT = require("../components/services/IFTTT.js");

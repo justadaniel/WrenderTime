@@ -7,6 +7,7 @@ const EventEmitter = require('events');
 const globals = require("./globals.js");
 const utilities = require("./Utilities.js");
 const settings = require("electron-settings");
+const log = require('electron-log');
 var fs = require("fs"); //Load the filesystem module
 var path = require("path");
 
@@ -52,7 +53,9 @@ var Settings = class Settings {
 	 * Returns the path to the settings file
  	*/
 	static GetSettingsFile() {
-		return settings.file();
+		const settings_path = settings.file();
+		log.info(`Settings Path: ${settings_path}`);
+		return settings_path;
 	}
 
 	/**

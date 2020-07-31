@@ -32,6 +32,8 @@ let mainWindow = null;
 let startWatchingOnBoot = false;
 let isWatching = false;
 let tray;
+
+const autoUpdateEnabled = false;
 const devToolsEnabled = utilities.IsDev();
 // const devToolsEnabled = false;
 const isStandaloneWindow = false;
@@ -178,10 +180,9 @@ function OnAppReady() {
     if (Settings.General.startWatchingImmediately.Get())
         ToggleWatching(Settings.General.watchFolderLocation.Get());
 
-
-
-    // autoUpdater.setFeedURL("https://github.com/justadaniel/WrenderTime/tree/development/releases/");
-    // autoUpdater.checkForUpdatesAndNotify();
+    if (autoUpdateEnabled) {
+        autoUpdater.checkForUpdatesAndNotify();
+    }
 }
 
 function sendStatusToWindow(text) {
@@ -189,27 +190,29 @@ function sendStatusToWindow(text) {
     // win.webContents.send('message', text);
 }
 
-// autoUpdater.on('checking-for-update', () => {
-//     sendStatusToWindow('Checking for update...');
-// })
-// autoUpdater.on('update-available', (info) => {
-//     sendStatusToWindow('Update available.');
-// })
-// autoUpdater.on('update-not-available', (info) => {
-//     sendStatusToWindow('Update not available.');
-// })
-// autoUpdater.on('error', (err) => {
-//     sendStatusToWindow('Error in auto-updater. ' + err);
-// })
-// autoUpdater.on('download-progress', (progressObj) => {
-//     let log_message = "Download speed: " + progressObj.bytesPerSecond;
-//     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-//     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-//     sendStatusToWindow(log_message);
-// })
-// autoUpdater.on('update-downloaded', (info) => {
-//     sendStatusToWindow('Update downloaded');
-// });
+if (autoUpdateEnabled) {
+    autoUpdater.on('checking-for-update', () => {
+        sendStatusToWindow('Checking for update...');
+    })
+    autoUpdater.on('update-available', (info) => {
+        sendStatusToWindow('Update available.');
+    })
+    autoUpdater.on('update-not-available', (info) => {
+        sendStatusToWindow('Update not available.');
+    })
+    autoUpdater.on('error', (err) => {
+        sendStatusToWindow('Error in auto-updater. ' + err);
+    })
+    autoUpdater.on('download-progress', (progressObj) => {
+        let log_message = "Download speed: " + progressObj.bytesPerSecond;
+        log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+        log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+        sendStatusToWindow(log_message);
+    })
+    autoUpdater.on('update-downloaded', (info) => {
+        sendStatusToWindow('Update downloaded');
+    });
+}
 
 if (!isStandaloneWindow) {
     app.on("ready", function () {
