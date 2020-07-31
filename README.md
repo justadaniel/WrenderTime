@@ -1,5 +1,7 @@
-# WrenderTime
-<font color="red">**Warning:** macOS is extremely buggy! A lot of the features on that work on Windows don't run on Mac well.</font>
+# WrenderTime ![Build/release](https://github.com/justadaniel/WrenderTime/workflows/Build/release/badge.svg)
+<img src="https://raw.githubusercontent.com/justadaniel/WrenderTime/release/build/icon.png" width="128" height="128">
+
+<font color="red">**Warning:** It's is extremely buggy and there is still a lot of work to do!</font>
 
 I wanted to make WrenderTime because I tend to walk away from my computer when it's rendering a video. This application monitors directories and looks for when Adobe exports videos to them. The app sits in the system tray on Windows and on in the menu bar on macOS.
 
@@ -17,7 +19,7 @@ To setup IFTTT, you need to create a webhook action on their site, set the event
 #### To-Do
 ###### Features
 - [X] Automatic Build using Github Actions
-- [ ] Feature-Parody on MacOS
+- [ ] MacOS Feature Parity
 - [ ] Auto-Updater
 - [ ] Better App Icon
 - [ ] Video Preview Support (Maybe)
