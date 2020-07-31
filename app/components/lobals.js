@@ -37,7 +37,8 @@ var globals = {
     },
     urls: {
         github: "https://github.com/justadaniel/WrenderTime",
-        github_issues: "https://github.com/justadaniel/WrenderTime/issues"
+        github_issues: "https://github.com/justadaniel/WrenderTime/issues",
+        meh: "meh"
     }
 };
 
