@@ -13,7 +13,7 @@ const {
 } = require("electron");
 const path = require("path");
 // const rq = require("./components/electron-require.js");
-const globals = require("./components/globals.js");
+const globals = require("./components/Globals.js");
 const utilities = require("./components/Utilities.js");
 const { autoUpdater } = require("electron-updater");
 const ModernWindow = require("./components/ModernWindow.js");
@@ -24,24 +24,30 @@ const RenderList = require("./components/RenderList.js");
 const RenderFile = require("./components/RenderFile.js");
 const Settings = require("./components/Settings.js");
 const IFTTT = require("./components/services/IFTTT.js");
+const MainViewController = require("./views/main_controller.js");
+const { isRegExp } = require("util");
 
 const iconPath = path.join(__dirname, "..", "./app/assets/images", "IconTemplate~white.png");
 
 let mb = null;
 let mainWindow = null;
-let startWatchingOnBoot = false;
-let isWatching = false;
 let tray;
 
-const autoUpdateEnabled = false;
-const devToolsEnabled = utilities.IsDev();
-// const devToolsEnabled = false;
+const autoUpdateEnabled = true;
+// const devToolsEnabled = utilities.IsDev();
+const devToolsEnabled = false;
 const isStandaloneWindow = false;
 
 const gotTheLock = app.requestSingleInstanceLock();
 
-// autoUpdater.logger = log;
-// autoUpdater.logger.transports.file.level = 'info';
+if (autoUpdateEnabled) {
+    autoUpdater.logger = log;
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = false;
+    autoUpdater.logger.transports.file.level = 'info';
+    autoUpdater.allowPrerelease = true;
+    autoUpdater.allowDowngrade = true;
+}
 
 const RENDER_LIST = new RenderList();
 const isMac = process.platform === 'darwin';
@@ -91,7 +97,7 @@ const appMenu = Menu.buildFromTemplate([
             {
                 label: labels.checkForUpdates,
                 click: async () => {
-                    await shell.openExternal(globals.urls.github_issues)
+                    CheckForUpdates();
                 }
             },
             { type: 'separator' },
@@ -119,7 +125,7 @@ const appMenu = Menu.buildFromTemplate([
             {
                 label: labels.checkForUpdates,
                 click: async () => {
-                    await shell.openExternal(globals.urls.github_issues)
+                    CheckForUpdates();
                 }
             },
             { type: 'separator' },
@@ -132,7 +138,7 @@ const appMenu = Menu.buildFromTemplate([
             {
                 label: labels.githubRepo,
                 click: async () => {
-                    await shell.openExternal(globals.urls.github)
+                    await shell.openExternal(globals.urls.github);
                 }
             },
             {
@@ -160,60 +166,24 @@ if (!gotTheLock) {
 }
 
 
-// app.whenReady().then(() => {
-//     CreateMainWindow();
-// });
-
-
-
-
-function OnAppReady() {
-    log.info("Ready");
-
-    if (Settings.General.showNotificationOnAppReady.Get() == true)
-        utilities.ShowNotification("App Running");
-    else
-        console.log("App Running");
-
-    utilities.SetStartAppOnBoot(Settings.General.runOnSystemStart.Get());
-
-    if (Settings.General.startWatchingImmediately.Get())
-        ToggleWatching(Settings.General.watchFolderLocation.Get());
-
-    if (autoUpdateEnabled) {
-        autoUpdater.checkForUpdatesAndNotify();
-    }
-}
-
-function sendStatusToWindow(text) {
-    log.info(text);
-    // win.webContents.send('message', text);
-}
-
-if (autoUpdateEnabled) {
-    autoUpdater.on('checking-for-update', () => {
-        sendStatusToWindow('Checking for update...');
-    })
-    autoUpdater.on('update-available', (info) => {
-        sendStatusToWindow('Update available.');
-    })
-    autoUpdater.on('update-not-available', (info) => {
-        sendStatusToWindow('Update not available.');
-    })
-    autoUpdater.on('error', (err) => {
-        sendStatusToWindow('Error in auto-updater. ' + err);
-    })
-    autoUpdater.on('download-progress', (progressObj) => {
-        let log_message = "Download speed: " + progressObj.bytesPerSecond;
-        log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-        log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-        sendStatusToWindow(log_message);
-    })
-    autoUpdater.on('update-downloaded', (info) => {
-        sendStatusToWindow('Update downloaded');
+var mainView = null;
+app.on("ready", function () {
+    tray = new Tray(iconPath);
+    mainView = new MainViewController({
+        iconPath: iconPath,
+        tray: tray,
+        devToolsEnabled: devToolsEnabled,
+        dir: path.join(__dirname || path.resolve(dirname("")), "..", utilities.GetView())
     });
-}
+    tray.on("right-click", () => {
+        tray.popUpContextMenu(contextMenu);
+    });
+    mainView.on('ready', (e) => {
+        log.info("Ready");
+    });
+});
 
+/*
 if (!isStandaloneWindow) {
     app.on("ready", function () {
 
@@ -282,28 +252,64 @@ else {
         createWindow();
     });
 
-
-    app.on("activate", function () {
-        // On macOS it"s common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) {
-            CreateMainWindow();
-            OnAppReady();
-        }
-    });
-
-    // Quit when all windows are closed, except on macOS. There, it"s common
-    // for applications and their menu bar to stay active until the user quits
-    // explicitly with Cmd + Q.
-    app.on("window-all-closed", function () {
-        utilities.Quit(function () {
-            RENDER_LIST.StopWatching();
-        });
-    });
-
     // In this file you can include the rest of your app"s specific main process
     // code. You can also put them in separate files and require them here.
 }
+*/
+
+
+
+
+app.on("activate", function () {
+    // On macOS it"s common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
+        // createWindow();
+        console.log("meh");
+        // mainWindow.show();
+    } else {
+        // mainWindow.show();
+    }
+});
+
+// Quit when all windows are closed, except on macOS. There, it"s common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on("window-all-closed", function () {
+    utilities.Quit(function () {
+        RENDER_LIST.StopWatching();
+    });
+});
+
+
+if (autoUpdateEnabled) {
+
+    autoUpdater.on('checking-for-update', () => {
+        sendStatusToWindow('Checking for update...');
+    })
+    autoUpdater.on('update-available', (info) => {
+        sendStatusToWindow('Update available.');
+        mainView.SendEventToRenderer(globals.systemEventNames.UPDATE_AVAILABLE, info);
+        // utilities.ShowNotification("Update Available");
+    })
+    autoUpdater.on('update-not-available', (info) => {
+        sendStatusToWindow('Update not available.');
+    })
+    autoUpdater.on('error', (err) => {
+        sendStatusToWindow('Error in auto-updater. ' + err);
+    })
+    autoUpdater.on('download-progress', (progressObj) => {
+        let log_message = "Download speed: " + progressObj.bytesPerSecond;
+        log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+        log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+        sendStatusToWindow(log_message);
+    })
+    autoUpdater.on('update-downloaded', (info) => {
+        sendStatusToWindow('Update downloaded');
+    });
+
+}
+
 
 function RestoreMainWindow() {
     if (mb != null) {
@@ -314,15 +320,49 @@ function RestoreMainWindow() {
 }
 
 function SendEventToRenderer(event, arg0, arg1, arg2) {
-    if (mb != null) {
-        mb.window.webContents.send(event, arg0);
-    } else {
-        mainWindow.webContents.send(event, arg0);
-    }
+    // if (mb != null) {
+    //     mb.window.webContents.send(event, arg0);
+    // } else {
+    //     mainWindow.webContents.send(event, arg0);
+    // }
+}
+
+// app.whenReady().then(() => {
+//     CreateMainWindow();
+// });
+
+function sendStatusToWindow(text) {
+    log.info(text);
+    // win.webContents.send('message', text);
 }
 
 
 
+
+
+
+function OnAppReady() {
+    log.info("Ready");
+
+    if (Settings.General.showNotificationOnAppReady.Get() == true)
+        utilities.ShowNotification("App Running");
+    else
+        console.log("App Running");
+
+    utilities.SetStartAppOnBoot(Settings.General.runOnSystemStart.Get());
+
+    if (Settings.General.startWatchingImmediately.Get())
+        ToggleWatching(Settings.General.watchFolderLocation.Get());
+}
+
+
+function CheckForUpdates() {
+    log.info("Check for updates clicked.");
+
+    if (!autoUpdateEnabled) return;
+
+    autoUpdater.checkForUpdatesAndNotify();
+}
 
 
 let preferencesWindow;
@@ -338,7 +378,7 @@ function CreatePreferencesWindow() {
             preload: path.join(__dirname, "preload.js")
         }
     });
-    _preferencesWindow.removeMenu();
+    // _preferencesWindow.removeMenu();
     _preferencesWindow.loadFile(utilities.GetView("preferences.html"));
 
     if (devToolsEnabled)
@@ -358,7 +398,7 @@ function CreatePreferencesWindow() {
     return _preferencesWindow;
 }
 
-function OpenPreferences() {
+function OpenPreferences(args) {
     preferencesWindowShouldClose = false;
     if (preferencesWindow == null || preferencesWindow == undefined || preferencesWindow == '') {
         preferencesWindow = CreatePreferencesWindow();
@@ -369,6 +409,7 @@ function OpenPreferences() {
     } else {
         preferencesWindow.show();
     }
+    preferencesWindow.webContents.send(globals.systemEventNames.OPEN_PREFERENCES, args);
 }
 
 function ClosePreferences() {
@@ -393,7 +434,7 @@ function ClosePreferences() {
 
 RENDER_LIST.on(globals.systemEventNames.WATCH_STATUS_CHANGED, function (isWatching) {
     // console.log(`Is Watching == ${isWatching}`);
-    SendEventToRenderer(globals.systemEventNames.WATCH_STATUS_CHANGED, isWatching);
+    mainView.SendEventToRenderer(globals.systemEventNames.WATCH_STATUS_CHANGED, isWatching);
 
     if (mb != null) {
         mb.tooltip = app.name + " - " + (RENDER_LIST.isWatching) ? "Watching" : "Not Watching";
@@ -401,7 +442,7 @@ RENDER_LIST.on(globals.systemEventNames.WATCH_STATUS_CHANGED, function (isWatchi
 });
 
 RENDER_LIST.on(globals.systemEventNames.WATCH_LIST_UPDATED, function (items) {
-    // SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, items);
+    // mainView.SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, items);
     UpdateWatchList();
 });
 
@@ -418,7 +459,8 @@ RENDER_LIST.on(globals.systemEventNames.RENDER_FINISHED, function (file) {
 
 function UpdateWatchList() {
     // console.log(`List Updated!!`);
-    SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, RENDER_LIST.items);
+    if (mainView != null && mainView != undefined)
+        mainView.SendEventToRenderer(globals.systemEventNames.WATCH_LIST_UPDATED, RENDER_LIST.items);
 }
 function UpdateWatchListStatus(event) {
     event.reply(globals.systemEventNames.WATCH_STATUS_CHANGED, RENDER_LIST.isWatching);
@@ -453,27 +495,44 @@ ipcMain.on(globals.systemEventNames.REQUEST_QUIT, (event) => {
     });
 });
 
-ipcMain.on(globals.systemEventNames.OPEN_PREFERENCES, (e, args) => {
-    OpenPreferences();
-});
 
 ipcMain.on(globals.systemEventNames.START_ON_BOOT_CHANGED, (e, args) => {
     utilities.SetStartAppOnBoot(args.startOnBoot);
 });
 
-ipcMain.on(globals.systemEventNames.CLOSE_PREFERENCES, (e, args) => {
-    if (args.applySettings)
-        console.log("Settings Applied");
+ipcMain.on(globals.systemEventNames.OPEN_PREFERENCES, (e, args) => {
+    console.log(args);
+    OpenPreferences(args);
+});
 
+ipcMain.on(globals.systemEventNames.CLOSE_PREFERENCES, (e, args) => {
+    // if (args.applySettings) {
+    //     console.log("Settings Applied");
+    //     mainView.SendEventToRenderer(globals.systemEventNames.APPLY_PREFERENCES, args);
+    // }
     preferencesWindowShouldClose = true;
     preferencesWindow.close();
     preferencesWindow = null;
 });
 
-ipcMain.on(globals.systemEventNames.SELECT_DIRECTORY, async (event, args) => {
-    const result = await dialog.showOpenDialog(mainWindow, {
-        properties: ['openDirectory']
-    });
-    args = Object.assign(result, args);
-    event.reply(globals.systemEventNames.DIRECTORY_SELECTED, args);
+ipcMain.on(globals.systemEventNames.APPLY_PREFERENCES, (e, args) => {
+    if (args.mustRestart && RENDER_LIST.isWatching) {
+        RENDER_LIST.StopWatching(() => {
+            RENDER_LIST.StartWatching(Settings.General.watchFolderLocation.Get());
+        });
+    }
+
+    mainView.SendEventToRenderer(globals.systemEventNames.APPLY_PREFERENCES, args);
 });
+
+ipcMain.on(globals.systemEventNames.SELECT_DIRECTORY, async (event, args) => {
+    var result = dialog.showOpenDialog({
+        properties: ['openDirectory']
+    }).then(result => {
+
+        args = Object.assign(result, args);
+        event.reply(globals.systemEventNames.DIRECTORY_SELECTED, args);
+    });
+});
+
+ipcMain.on(globals.systemEventNames.CHECK_FOR_UPDATES, CheckForUpdates);

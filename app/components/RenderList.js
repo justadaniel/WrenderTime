@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 const EventEmitter = require('events');
 var inherits = require('util').inherits;
-const globals = require("./globals.js");
+const globals = require("./Globals.js");
 const utilities = require("./Utilities.js");
 const chokidar = require("chokidar");
 const RenderFile = require("./RenderFile.js");

@@ -146,7 +146,8 @@ var utilities = {
     ShowNotification: function (message, options = {}) {
         let defaults = {
             title: app.name,
-            body: message
+            body: message,
+            silent: true
         };
         options = Object.assign(defaults, options);
 

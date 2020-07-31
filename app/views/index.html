@@ -18,8 +18,9 @@
 	<title>Loading...</title>
 	<script type="text/javascript">
 		const { remote, ipcRenderer } = require("electron");
-		const utils = require("../components/Utilities.js");
+		const utilities = require("../components/Utilities.js");
 		const globals = require("../components/Globals.js");
+		const log = require('electron-log');
 		const RenderFile = require("../components/RenderFile.js");
 		const Settings = require("../components/Settings.js");
 		const appname = remote.app.getName();
@@ -91,6 +92,8 @@
 				<div class="list">
 					<ul>
 						<li><a class="list-button item-link popover-close open-settings" href="#">Preferences</a></li>
+						<li><a class="list-button item-link popover-close check-for-updates" href="#">Check for
+								Updates</a></li>
 						<!-- <li><a class="list-button item-link popover-close toggle-devtools" href="#">Toggle DevTools</a></li> -->
 					</ul>
 				</div>
@@ -124,7 +127,10 @@
 
 
 
-		$$('.open-settings').on('click', OpenSettings);
+		$$('.open-settings').on('click', () => {
+			OpenSettings(0);
+		});
+		$$('.check-for-updates').on('click', CheckForUpdates);
 
 		const pageIDs = {
 			form: "#my-form",
@@ -214,15 +220,25 @@
 
 		const mainPageName = "main";
 		$$(document).on('page:init', `.page[data-name="${mainPageName}"]`, function (e) {
-			changePageTitle(`${appname} - v${version}`);
-			CreateWatchList();
+			// $$('.app-version').text('Prerelease');
+			$$('.app-version').text(`Version ${version}`);
 
+			changePageTitle(`${appname} - v${version}`);
+			SetToggleButtonDisabled(Settings.General.watchFolderLocation.Get() != null)
+			CreateWatchList();
 			// if (Settings.General.startWatchingImmediately.Get())
 			// 	toggleWatching();
 		});
 
 		ipcRenderer.on(globals.systemEventNames.WATCH_STATUS_CHANGED, (event, isWatching) => {
-			$$(pageIDs.toggleButton).text((isWatching) ? "Stop" : "Start");
+			$$(pageIDs.toggleButton).text((isWatching) ? "Stop Watching" : "Start Watching");
+
+			if ($$(pageIDs.toggleButton).hasClass('color-red'))
+				$$(pageIDs.toggleButton).removeClass('color-red');
+
+			if (isWatching)
+				$$(pageIDs.toggleButton).addClass('color-red')
+
 			$$(pageIDs.workingDirectoryInputField).disabled = isWatching;
 
 			// console.log(`IsWatching: ${isWatching}`);
@@ -245,9 +261,46 @@
 			}
 		});
 
+		ipcRenderer.on(globals.systemEventNames.UPDATE_AVAILABLE, (e, info) => {
+			log.info(info);
+			var toast = app.toast.create({
+				text: `Update Available: v${info.version}`,
+				closeButton: true,
+				closeButtonText: 'Hide',
+				closeTimeout: 2000,
+				on: {
+					close: function () {
+						// app.dialog.alert('Toast closed');
+						OpenSettings('updates');
+					}
+				}
+			});
+			toast.open();
+		});
 
-		function OpenSettings() {
-			ipcRenderer.send(globals.systemEventNames.OPEN_PREFERENCES, {});
+		ipcRenderer.on(globals.systemEventNames.APPLY_PREFERENCES, (e, args) => {
+			SetToggleButtonDisabled(args.general.watchFolderLocation != null && args.general.watchFolderLocation != undefined && args.general.watchFolderLocation != '')
+			console.log(args);
+		});
+
+		function SetToggleButtonDisabled(disabled = true) {
+			const disabledClassName = 'disabled';
+			if (disabled) {
+				if ($$(pageIDs.toggleButton).hasClass(disabledClassName))
+					$$(pageIDs.toggleButton).removeClass(disabledClassName);
+			} else {
+				$$(pageIDs.toggleButton).addClass(disabledClassName);
+			}
+		}
+
+		function OpenSettings(tab = 0) {
+			console.log("Opening Settings");
+			// app.dialog.alert("Open Settings");
+			ipcRenderer.send(globals.systemEventNames.OPEN_PREFERENCES, { tab: tab });
+		}
+
+		function CheckForUpdates() {
+			ipcRenderer.send(globals.systemEventNames.CHECK_FOR_UPDATES, {});
 		}
 	</script>
 </body>

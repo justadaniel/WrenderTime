@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 const EventEmitter = require('events');
 
-const globals = require("./globals.js");
+const globals = require("./Globals.js");
 const utilities = require("./Utilities.js");
 var fs = require("fs"); //Load the filesystem module
 var path = require("path");

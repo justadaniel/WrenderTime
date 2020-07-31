@@ -19,15 +19,16 @@
 	<script type="text/javascript">
 		const { remote, ipcRenderer } = require("electron");
 		const utilities = require("../components/Utilities.js");
-		const globals = require("../components/globals.js");
+		const globals = require("../components/Globals.js");
 		const log = require('electron-log');
 		const Settings = require("../components/Settings.js");
 		const RenderFile = require("../components/RenderFile.js");
 		const IFTTT = require("../components/services/IFTTT.js");
 		const path = require('path');
+
 		const appname = remote.app.getName();
 		const version = remote.app.getVersion();
-		const exampleWorkingDirectory = (remote.process.platform === 'darwin') ? "/Users/johndoe/Desktop" : "C:\\sad\\sadsa";
+		const exampleWorkingDirectory = (remote.process.platform === 'darwin') ? `/Users/${process.env["LOGNAME"]}/Movies` : "C:\\sad\\sadsa";
 	</script>
 </head>
 
@@ -52,7 +53,7 @@
 						</div>
 						<div class="subnavbar">
 							<div class="subnavbar-inner">
-								<div class="segmented  segmented-strong">
+								<div class="segmented  segmented-strong" style="max-width: 300px;margin:0px auto;">
 									<a class="button tab-link tab-link-active" href="#tab-general">General</a>
 									<a class="button tab-link" href="#tab-services">Services</a>
 									<a class="button tab-link" href="#tab-other">Other</a>
@@ -303,6 +304,15 @@
 			Settings.Services.IFTTT.apiKey.Set(servicesFormData["ifttt-api-key"]);
 
 
+			ipcRenderer.send(globals.systemEventNames.APPLY_PREFERENCES, {
+				mustRestart: mustRestart,
+				general: {
+					watchFolderLocation: Settings.General.watchFolderLocation.Get(),
+					runOnSystemStart: Settings.General.runOnSystemStart.Get(),
+					startWatchingImmediately: Settings.General.startWatchingImmediately.Get(),
+					showNotificationOnAppReady: Settings.General.showNotificationOnAppReady.Get()
+				}
+			});
 			app.dialog.close();
 			setTimeout(function () {
 
