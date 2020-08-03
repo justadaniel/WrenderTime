@@ -7,10 +7,10 @@ var inherits = require('util').inherits;
 const globals = require("./Globals.js");
 const utilities = require("./Utilities.js");
 const chokidar = require("chokidar");
+const log = require('electron-log');
 const RenderFile = require("./RenderFile.js");
 var fs = require("fs"); //Load the filesystem module
 var path = require("path");
-const log = require('electron-log');
 // const { Console } = require('console');
 
 
@@ -99,17 +99,19 @@ var RenderList = class RenderList extends EventEmitter {
 				_currentFile.SetMainFile(path);
 			}
 		}
-		console.log(`HasEncoderID: ${RenderFile.HasEncoderID(path)}`);
+		log.info(`HasEncoderID: ${RenderFile.HasEncoderID(path)}`);
 	}
 
 	Change(path) {
-		// console.log(`File: ${path}`);
+		// log.info(`File: ${path}`);
 
 		if (this.Exists(path)) {
-			console.log(`Changed \"${path}\"`);
+			log.info(`Changed \"${path}\"`);
 			let _index = this.GetIndexByPrettyName(path);
 			let _changedFile = this.items[_index];
 			_changedFile.Refresh();
+			// log.info(`Notify: ${_changedFile.wasNotifiedOfComplete}`);
+			// log.info(`Finished: ${_changedFile.isFinished}`);
 
 			if (_changedFile.ShouldNotifyComplete()) {
 				_changedFile.Notify();
@@ -121,16 +123,16 @@ var RenderList = class RenderList extends EventEmitter {
 	Remove(path) {
 		if (!RenderFile.HasEncoderID(path)) {
 			this.RemoveFileByName(path);
-			console.log(`Removed: \"${path}\"`);
+			log.info(`Removed: \"${path}\"`);
 		} else {
-			console.log(`Wanted to remove: \"${path}\"`);
+			log.info(`Wanted to remove: \"${path}\"`);
 		}
 	}
 
 	Clear() {
 		this.items = [];
 		this.emit(globals.systemEventNames.WATCH_LIST_UPDATED, this.items);
-		console.log("Items Cleared");
+		log.info("Items Cleared");
 	}
 
 	RemoveFileByName(name) {
@@ -183,14 +185,14 @@ var RenderList = class RenderList extends EventEmitter {
 				break;
 			case RenderList.WatchEvents.UNLINK:
 				this.Remove(path);
-				// console.log(`Wanted to unlink ${path}`);
+				// log.info(`Wanted to unlink ${path}`);
 				break;
 			default:
-				console.log(`\"${watchEvent}\" not added to switch`);
+				log.info(`\"${watchEvent}\" not added to switch`);
 				break;
 		}
 
-		// console.log(`File ${watchEvent}: ${path}`);
+		// log.info(`File ${watchEvent}: ${path}`);
 
 		this.emit(globals.systemEventNames.WATCH_FILE_STATUS_CHANGED, watchEvent, path);
 		this.emit(globals.systemEventNames.WATCH_LIST_UPDATED, this.items);
@@ -202,10 +204,10 @@ var RenderList = class RenderList extends EventEmitter {
 		this.watchDir = dir;
 		this.isWatching = true;
 		this.watcher = chokidar.watch(dir);
-		console.log(`Started watching at path \"${dir}\"`);
+		log.info(`Started watching at path \"${dir}\"`);
 
 		this.watcher.on("all", (event, path) => {
-			// console.log(event, path);
+			// log.info(event, path);
 			this.ProcessFile(event, path, fileChangeCallback);
 			// ipcRenderer.send(globals.systemEventNames.WATCH_STATUS_CHANGED, this.isWatching);
 
@@ -221,7 +223,7 @@ var RenderList = class RenderList extends EventEmitter {
 		if (this.watcher != null && this.watcher != "undefined") {
 			this.watcher.close().then(() => {
 				// this.isWatching = false;
-				console.log("Closed watcher");
+				log.info("Closed watcher");
 			});
 			this.Clear();
 			this.watcher = null;

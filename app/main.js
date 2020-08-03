@@ -33,14 +33,9 @@ let mb = null;
 let mainWindow = null;
 let tray;
 
-const autoUpdateEnabled = true;
-// const devToolsEnabled = utilities.IsDev();
-const devToolsEnabled = false;
-const isStandaloneWindow = false;
-
 const gotTheLock = app.requestSingleInstanceLock();
 
-if (autoUpdateEnabled) {
+if (globals.features.autoUpdate) {
     autoUpdater.logger = log;
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
@@ -50,7 +45,6 @@ if (autoUpdateEnabled) {
 }
 
 const RENDER_LIST = new RenderList();
-const isMac = process.platform === 'darwin';
 
 
 const labels = {
@@ -83,7 +77,7 @@ const contextMenu = Menu.buildFromTemplate([
 ]);
 const appMenu = Menu.buildFromTemplate([
     // { role: 'appMenu' }
-    ...(isMac ? [{
+    ...(utilities.IsMac() ? [{
         label: app.name,
         submenu: [
             { role: 'about' },
@@ -129,7 +123,7 @@ const appMenu = Menu.buildFromTemplate([
                 }
             },
             { type: 'separator' },
-            isMac ? { role: 'close' } : { role: 'quit' }
+            utilities.IsMac() ? { role: 'close' } : { role: 'quit' }
         ]
     },
     {
@@ -172,91 +166,14 @@ app.on("ready", function () {
     mainView = new MainViewController({
         iconPath: iconPath,
         tray: tray,
-        devToolsEnabled: devToolsEnabled,
+        devToolsEnabled: globals.features.devTools,
         dir: path.join(__dirname || path.resolve(dirname("")), "..", utilities.GetView())
     });
     tray.on("right-click", () => {
         tray.popUpContextMenu(contextMenu);
     });
-    mainView.on('ready', (e) => {
-        log.info("Ready");
-    });
+    mainView.on('ready', OnAppReady);
 });
-
-/*
-if (!isStandaloneWindow) {
-    app.on("ready", function () {
-
-        tray = new Tray(iconPath);
-
-        mb = menubar({
-            dir: path.join(__dirname || path.resolve(dirname("")), "..", utilities.GetView()),
-            tray: tray,
-            tooltip: `${app.name} - v${app.getVersion()}`,
-            preloadWindow: true,
-            browserWindow: {
-                // alwaysOnTop: true,
-                // transparent: true,
-                // draggable: false,
-                resizable: false,
-                webPreferences: {
-                    nodeIntegration: true
-                }
-            }
-        });
-        mb.app.commandLine.appendSwitch("disable-backgrounding-occluded-windows", "true");//could be a performance hit
-
-        mb.on("ready", () => {
-            OnAppReady();
-        });
-
-        // tray.on("click", () => {
-        //     console.log("Clicked");
-        // });
-        tray.on("right-click", () => {
-            tray.popUpContextMenu(contextMenu);
-        });
-
-        // mb.on("after-create-window", () => {
-        //     mb.window.openDevTools();
-        // });
-    });
-}
-else {
-
-    function createWindow() {
-        // Create the browser window.
-        mainWindow = new ModernWindow({
-            width: 800,
-            transparent: false,
-            frame: true,
-            webPreferences: {
-                nodeIntegration: true,
-                preload: path.join(__dirname, "preload.js")
-            }
-        });
-        // mainWindow.removeMenu();
-        Menu.setApplicationMenu(appMenu);
-
-        // and load the index.html of the app.
-        mainWindow.loadFile(utilities.GetView("index.html"));
-        // Open the DevTools.
-        if (devToolsEnabled)
-            mainWindow.webContents.openDevTools();
-    }
-
-    // This method will be called when Electron has finished
-    // initialization and is ready to create browser windows.
-    // Some APIs can only be used after this event occurs.
-    app.whenReady().then(() => {
-        createWindow();
-    });
-
-    // In this file you can include the rest of your app"s specific main process
-    // code. You can also put them in separate files and require them here.
-}
-*/
-
 
 
 
@@ -282,7 +199,7 @@ app.on("window-all-closed", function () {
 });
 
 
-if (autoUpdateEnabled) {
+if (globals.features.autoUpdate) {
 
     autoUpdater.on('checking-for-update', () => {
         sendStatusToWindow('Checking for update...');
@@ -347,7 +264,7 @@ function OnAppReady() {
     if (Settings.General.showNotificationOnAppReady.Get() == true)
         utilities.ShowNotification("App Running");
     else
-        console.log("App Running");
+        log.info("App Running");
 
     utilities.SetStartAppOnBoot(Settings.General.runOnSystemStart.Get());
 
@@ -359,7 +276,7 @@ function OnAppReady() {
 function CheckForUpdates() {
     log.info("Check for updates clicked.");
 
-    if (!autoUpdateEnabled) return;
+    if (!globals.features.autoUpdate) return;
 
     autoUpdater.checkForUpdatesAndNotify();
 }
@@ -381,7 +298,7 @@ function CreatePreferencesWindow() {
     // _preferencesWindow.removeMenu();
     _preferencesWindow.loadFile(utilities.GetView("preferences.html"));
 
-    if (devToolsEnabled)
+    if (globals.features.devTools)
         _preferencesWindow.webContents.openDevTools();
 
     _preferencesWindow.on('close', function (e) {
@@ -478,6 +395,7 @@ ipcMain.on(globals.systemEventNames.DOM_LOADED, (event) => {
 });
 
 function ToggleWatching(dir) {
+    log.info(`Toggle Watching: ${dir}`);
     RENDER_LIST.ToggleWatching(dir, function () {
         UpdateWatchList();
     });

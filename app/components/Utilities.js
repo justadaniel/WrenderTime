@@ -37,6 +37,9 @@ var utilities = {
         RAW: "raw"
     },
     Settings: settings,
+    IsMac: function () {
+        return process.platform === 'darwin';
+    },
     IsDev: function () {
         return isDev;
     },

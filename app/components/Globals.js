@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+const utilities = require("./Utilities.js");
 
 
 var globals = {
@@ -39,6 +40,11 @@ var globals = {
         github: "https://github.com/justadaniel/WrenderTime",
         github_issues: "https://github.com/justadaniel/WrenderTime/issues",
         meh: "meh"
+    },
+    features: {
+        autoUpdate: true,
+        devTools: utilities.IsDev(),
+        isStandaloneWindow: false
     }
 };
 

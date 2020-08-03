@@ -46,7 +46,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 		let filepath = this.file;
 
 		if (fs.existsSync(filepath)) {
-			// console.log(`File Refreshed - \"${filepath}\"`);
+			// log.info(`File Refreshed - \"${filepath}\"`);
 			this.UpdateStatsAsync();
 		}
 	}
@@ -61,7 +61,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 			}
 
 			//file exists
-			// console.log(`File Refreshed Asynchronusly - \"${filepath}\"`);
+			// log.info(`File Refreshed Asynchronusly - \"${filepath}\"`);
 			this.UpdateStatsAsync();
 
 			// setInterval(() => {
@@ -91,9 +91,9 @@ var RenderFile = class RenderFile extends EventEmitter {
 
 		// "D:\GCC\_Exported\Military Recognition (2020).32436.1956.m4v"
 
-		// console.log(`File Extension: ${this.file_extension}`);
-		// console.log(`Has Video: ${this.hasVideo}`);
-		// console.log(`Has Audio: ${this.hasAudio}`);
+		// log.info(`File Extension: ${this.file_extension}`);
+		// log.info(`Has Video: ${this.hasVideo}`);
+		// log.info(`Has Audio: ${this.hasAudio}`);
 
 		if (this.isaudio)
 			this.type = FILE_TYPE.AUDIO;
@@ -114,10 +114,10 @@ var RenderFile = class RenderFile extends EventEmitter {
 		// 		return;
 		// 	}
 
-		// 	console.log(stats.size);
+		// 	log.info(stats.size);
 		// 	// this.stats = stats;
 		// 	// this.size = stats.size;
-		// 	console.log(`Stats Updated Asynchronusly - \"${filepath}\"`);
+		// 	log.info(`Stats Updated Asynchronusly - \"${filepath}\"`);
 		// });
 	}
 
@@ -142,7 +142,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 			this.file = path;
 			this.Refresh();
 			this.ResetNotify();
-			console.log(`Changed Main File - ${path}`);
+			log.info(`Changed Main File - ${path}`);
 		}
 	}
 
@@ -152,7 +152,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 
 	Notify() {
 		this.wasNotifiedOfComplete = true;
-		console.log("Notifying of completion");
+		log.info("Notifying of completion");
 		this.emit(globals.systemEventNames.FILE_RENDER_FINISHED, this);
 	}
 
@@ -162,7 +162,7 @@ var RenderFile = class RenderFile extends EventEmitter {
 		} else if (globals.supportedFileTypes.audio.includes(RenderFile.GetFileExtension(path))) {
 			this.supportingAudioFile = path;
 		}
-		console.log(`Added Supporting File - ${path}`);
+		log.info(`Added Supporting File - ${path}`);
 	}
 
 	/**
@@ -170,9 +170,15 @@ var RenderFile = class RenderFile extends EventEmitter {
 	 */
 	ShouldNotifyComplete() {
 		this.Refresh();
-		console.log(`Was Notified ${this.wasNotifiedOfComplete}`);
+		log.info(`Was Notified ${this.wasNotifiedOfComplete}`);
+		log.info(`Size: ${this.size}`);
+
 		let shouldNotify = this.size > 0 && this.wasNotifiedOfComplete == false && globals.supportedFileTypes.mainVideo.includes(this.file_extension);
-		console.log(`Should Notify ${shouldNotify}`);
+
+		if (utilities.IsMac())
+			shouldNotify = this.wasNotifiedOfComplete == false && globals.supportedFileTypes.mainVideo.includes(this.file_extension);
+
+		log.info(`Should Notify ${shouldNotify}`);
 		return shouldNotify;
 	}
 
