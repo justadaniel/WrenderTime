@@ -37,17 +37,14 @@ var utilities = {
         RAW: "raw"
     },
     Settings: settings,
-    IsMac: function () {
-        return process.platform === 'darwin';
-    },
-    IsDev: function () {
-        return isDev;
-    },
-    GetAppPath: function () {
-        // let fileExtension = (process.platform == 'darwin') ? 'app' : 'exe';
-        // return app.getPath(fileExtension);
-        return process.execPath;
-    },
+    platform: {},
+    IsMacAppStoreBuild: () => process.mas == true,
+    IsWindowsStoreBuild: () => process.windowsStore == true,
+    IsMac: () => process.platform === 'darwin',
+    IsWindows: () => process.platform === 'win32',
+    OSVersion: () => process.getSystemVersion(),
+    IsDev: () => isDev,
+    GetAppPath: () => process.execPath,
     SetStartAppOnBoot: function (startOnBoot) {
         if (!utilities.IsDev()) {
             const exeName = path.basename(process.execPath);
